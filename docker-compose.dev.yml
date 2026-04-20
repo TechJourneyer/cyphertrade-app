@@ -12,11 +12,12 @@ services:
       context: .
       dockerfile: docker/Dockerfile.dev
     container_name: cyphertrade-web-dev
-    volumes:
-      # Mount source code for hot reload
-      - .:/app
-      # Preserve node_modules inside container
-      - /app/node_modules
+    # Volumes disabled until React app is scaffolded
+    # volumes:
+    #   # Mount source code for hot reload
+    #   - .:/app
+    #   # Preserve node_modules inside container
+    #   - /app/node_modules
     ports:
       - "${WEB_PORT:-3000}:3000"
     environment:
