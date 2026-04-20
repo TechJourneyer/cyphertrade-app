@@ -1,0 +1,36 @@
+# Cyphertrade App - Docker Compose Configuration
+# React SPA Production Setup
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # React Application (Nginx)
+  # ===========================================
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api/v1}
+        - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8082}
+    container_name: cyphertrade-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:80"
+    networks:
+      - cyphertrade-app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# ===========================================
+# Networks
+# ===========================================
+networks:
+  cyphertrade-app-network:
+    driver: bridge
+    name: cyphertrade-app-network

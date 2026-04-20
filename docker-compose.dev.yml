@@ -1,0 +1,27 @@
+# Cyphertrade App - Docker Compose Development Override
+# Use: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  # ===========================================
+  # React Application - Development Mode
+  # ===========================================
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: cyphertrade-web-dev
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      # Preserve node_modules inside container
+      - /app/node_modules
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:8000/api/v1}
+      - VITE_WS_URL=${VITE_WS_URL:-ws://localhost:8082}
+    stdin_open: true
+    tty: true
