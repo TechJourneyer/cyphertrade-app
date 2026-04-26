@@ -1,10 +1,10 @@
 # Cyphertrade App - Development Dockerfile
-# Node.js with Vite dev server for hot module replacement
+# Node.js with Next.js dev server for hot module replacement
 
 FROM node:20-alpine
 
 LABEL maintainer="Cyphertrade Team"
-LABEL description="Cyphertrade React SPA - Development"
+LABEL description="Cyphertrade Next.js App - Development"
 
 WORKDIR /app
 
@@ -15,12 +15,13 @@ RUN npm install
 # Copy source code (will be overridden by volume mount)
 COPY . .
 
-# Expose Vite dev server port
+# Expose Next.js dev server port
 EXPOSE 3000
 
 # Environment variables
 ENV HOST=0.0.0.0
 ENV PORT=3000
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Start Vite development server
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Start Next.js development server
+CMD ["npm", "run", "dev"]
