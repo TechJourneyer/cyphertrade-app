@@ -53,12 +53,17 @@ export default function TradingAccountsPage() {
   const [page, setPage] = useState(1);
 
   const { data: responseData, isLoading } = useQuery({
-    queryKey: ['trading-accounts', page],
+    queryKey: ['trading-accounts', 'list', page],
     queryFn: () => tradingAccountsApi.list(page, PAGE_SIZE),
     enabled: hasHydrated,
   });
 
-  const accounts: TradingAccount[] = (responseData as any)?.data ?? [];
+  const listData = (responseData as any)?.data;
+  const accounts: TradingAccount[] = Array.isArray(listData)
+    ? listData
+    : Array.isArray(listData?.data)
+      ? listData.data
+      : [];
   const meta: PaginationMeta | undefined = (responseData as any)?.meta;
 
   if (!hasHydrated) {

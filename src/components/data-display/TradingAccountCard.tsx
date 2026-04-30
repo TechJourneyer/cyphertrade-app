@@ -29,7 +29,7 @@ function formatDate(dateStr: string | null): string {
 }
 
 export function TradingAccountCard({ account }: TradingAccountCardProps) {
-  const tokenExpired = account.status === 'token_expired' || account.auth_status === 'expired'
+  const statusLabel = account.status === 1 ? 'active' : 'inactive'
 
   return (
     <Card className="group flex flex-col transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5">
@@ -46,7 +46,7 @@ export function TradingAccountCard({ account }: TradingAccountCardProps) {
               <p className="mt-0.5 truncate text-xs text-muted-foreground">{account.app_name}</p>
             </div>
           </div>
-          <StatusBadge status={account.status} className="shrink-0" />
+          <StatusBadge status={statusLabel} className="shrink-0" />
         </div>
       </CardHeader>
 
@@ -57,17 +57,6 @@ export function TradingAccountCard({ account }: TradingAccountCardProps) {
           <span className="text-muted-foreground">Terminal</span>
           <span className={`ml-auto font-medium ${account.is_terminal_on ? 'text-success' : 'text-muted-foreground'}`}>
             {account.is_terminal_on ? 'Active' : 'Inactive'}
-          </span>
-        </div>
-
-        {/* Auth / Token status */}
-        <div className="flex items-center gap-2 text-xs">
-          {tokenExpired
-            ? <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-warning" />
-            : <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" />}
-          <span className="text-muted-foreground">Token</span>
-          <span className={`ml-auto font-medium ${tokenExpired ? 'text-warning' : 'text-success'}`}>
-            {tokenExpired ? 'Expired' : 'Valid'}
           </span>
         </div>
 

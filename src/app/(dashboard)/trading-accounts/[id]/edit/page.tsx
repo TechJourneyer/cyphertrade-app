@@ -199,21 +199,22 @@ export default function EditTradingAccountPage() {
 
   const oauthStatus = searchParams.get('oauth')
   const oauthMessage = searchParams.get('oauth_message')
+  const saveStatus = searchParams.get('save')
+  const saveMessage = searchParams.get('save_message')
 
   const [accountName, setAccountName] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [credentials, setCredentials] = useState<Record<string, string>>({})
-  const [error, setError] = useState('')
   const [initialised, setInitialised] = useState(false)
 
   const { data: accountResponse, isLoading: accountLoading } = useQuery({
-    queryKey: ['trading-accounts', accountId],
+    queryKey: ['trading-accounts', 'detail', accountId],
     queryFn: () => tradingAccountsApi.get(accountId),
     enabled: hasHydrated && !isNaN(accountId),
   })
 
   const { data: credsResponse, isLoading: credsLoading } = useQuery({
-    queryKey: ['trading-accounts', accountId, 'credentials'],
+    queryKey: ['trading-accounts', 'detail', accountId, 'credentials'],
     queryFn: () => tradingAccountsApi.getCredentialsSchema(accountId),
     enabled: hasHydrated && !isNaN(accountId),
   })
@@ -233,18 +234,25 @@ export default function EditTradingAccountPage() {
   const mutation = useMutation({
     mutationFn: (payload: tradingAccountsApi.UpdateTradingAccountPayload) =>
       tradingAccountsApi.update(accountId, payload),
-    onSuccess: () => {
+    onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: ['trading-accounts'] })
-      router.push('/trading-accounts')
+      const params = new URLSearchParams({
+        save: 'success',
+        save_message: response.message || 'Account details updated successfully.',
+      })
+      router.replace(`/trading-accounts/${accountId}/edit?${params.toString()}`)
     },
     onError: (err: Error) => {
-      setError(err.message || 'Failed to update account')
+      const params = new URLSearchParams({
+        save: 'error',
+        save_message: err.message || 'Failed to update account details.',
+      })
+      router.replace(`/trading-accounts/${accountId}/edit?${params.toString()}`)
     },
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
     const filteredCreds = Object.fromEntries(
       Object.entries(credentials).filter(([, v]) => v.trim() !== '')
     )
@@ -293,6 +301,18 @@ export default function EditTradingAccountPage() {
       {oauthStatus === 'error' && (
         <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {oauthMessage ?? 'Failed to connect terminal. Please try again.'}
+        </div>
+      )}
+
+      {saveStatus === 'success' && (
+        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
+          {saveMessage ?? 'Account details updated successfully.'}
+        </div>
+      )}
+
+      {saveStatus === 'error' && (
+        <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {saveMessage ?? 'Failed to update account details.'}
         </div>
       )}
 
@@ -368,12 +388,6 @@ export default function EditTradingAccountPage() {
               ))}
             </>
           ) : null}
-
-          {error && (
-            <div className="rounded-md border border-destructive/20 bg-destructive/10 px-3 py-2 text-xs text-destructive">
-              {error}
-            </div>
-          )}
 
           <div className="flex gap-2 pt-1">
             <Button type="submit" disabled={mutation.isPending}>
