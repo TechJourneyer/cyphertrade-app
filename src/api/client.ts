@@ -52,6 +52,16 @@ export async function apiGet<T>(path: string, params?: Record<string, unknown>):
   return res.data.data
 }
 
+/**
+ * For paginated list endpoints: returns both `data` array and top-level `meta`.
+ * The API envelope is { data: T[], meta: PaginationMeta } — apiGet only extracts
+ * res.data.data (the array), discarding meta. This helper reads both fields.
+ */
+export async function apiList<T>(path: string, params?: Record<string, unknown>): Promise<{ data: T[]; meta: import('@/types/api').PaginationMeta }> {
+  const res = await apiClient.get<{ data: T[]; meta: import('@/types/api').PaginationMeta }>(path, { params })
+  return { data: res.data.data, meta: res.data.meta }
+}
+
 export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   const res = await apiClient.post<{ data: T }>(path, body)
   return res.data.data

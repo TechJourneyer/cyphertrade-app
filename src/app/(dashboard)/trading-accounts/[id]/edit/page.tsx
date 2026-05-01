@@ -7,88 +7,14 @@ import Link from 'next/link';
 import { Wifi, WifiOff, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageShell } from '@/components/layout/PageShell';
 import { Skeleton } from '@/components/ui/skeleton';
 import { StatusBadge } from '@/components/data-display/StatusBadge';
 import { useAuth } from '@/hooks/useAuth';
 import * as tradingAccountsApi from '@/api/trading-accounts';
 import type { CredentialField } from '@/api/trading-accounts';
 import type { TradingAccount } from '@/types/api';
-
-// ─── Inline toggle switch ─────────────────────────────────────────────────────
-
-function ToggleSwitch({
-  checked,
-  onChange,
-  label,
-  onLabel = 'Active',
-  offLabel = 'Inactive',
-}: {
-  checked: boolean
-  onChange: (v: boolean) => void
-  label: string
-  onLabel?: string
-  offLabel?: string
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{checked ? onLabel : offLabel}</p>
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-          checked ? 'bg-primary' : 'bg-muted'
-        }`}
-      >
-        <span
-          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg transform transition-transform ${
-            checked ? 'translate-x-5' : 'translate-x-0'
-          }`}
-        />
-      </button>
-    </div>
-  )
-}
-
-// ─── Credential field renderer ────────────────────────────────────────────────
-
-function CredentialInput({
-  field,
-  value,
-  onChange,
-}: {
-  field: CredentialField
-  value: string
-  onChange: (value: string) => void
-}) {
-  const baseClass =
-    'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
-
-  if ((field.type === 'select' || field.type === 'select2') && field.options) {
-    return (
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={baseClass}>
-        <option value="">Select…</option>
-        {Object.entries(field.options).map(([k, v]) => (
-          <option key={k} value={k}>{v}</option>
-        ))}
-      </select>
-    )
-  }
-
-  return (
-    <Input
-      type={field.type === 'password' ? 'password' : 'text'}
-      placeholder={field.has_value ? '••••••••  (leave blank to keep existing)' : `Enter ${field.label}`}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  )
-}
+import { ToggleSwitch, CredentialInput } from '@/components/forms/trading-account-fields';
 
 // ─── Terminal section ─────────────────────────────────────────────────────────
 
@@ -219,8 +145,8 @@ export default function EditTradingAccountPage() {
     enabled: hasHydrated && !isNaN(accountId),
   })
 
-  const account: TradingAccount | undefined = (accountResponse as any)?.data
-  const credentialFields: CredentialField[] = (credsResponse as any)?.data?.fields ?? []
+  const account: TradingAccount | undefined = accountResponse
+  const credentialFields: CredentialField[] = credsResponse?.fields ?? []
 
   // Prefill form once account data arrives (run only once)
   useEffect(() => {
@@ -234,11 +160,11 @@ export default function EditTradingAccountPage() {
   const mutation = useMutation({
     mutationFn: (payload: tradingAccountsApi.UpdateTradingAccountPayload) =>
       tradingAccountsApi.update(accountId, payload),
-    onSuccess: (response) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['trading-accounts'] })
       const params = new URLSearchParams({
         save: 'success',
-        save_message: response.message || 'Account details updated successfully.',
+        save_message: 'Account details updated successfully.',
       })
       router.replace(`/trading-accounts/${accountId}/edit?${params.toString()}`)
     },
@@ -265,32 +191,30 @@ export default function EditTradingAccountPage() {
 
   const isLoading = !hasHydrated || accountLoading
 
-  if (isLoading) return <Skeleton className="h-64 w-full" />
+  if (isLoading) return <PageShell title="Edit Trading Account" isLoading />
 
   if (!account) {
     return (
-      <div>
-        <PageHeader title="Edit Account" description="Account not found" />
+      <PageShell title="Edit Account" description="Account not found">
         <p className="text-sm text-muted-foreground">
           The account you are looking for does not exist.{' '}
           <Link href="/trading-accounts" className="text-primary underline underline-offset-2">
             Back to Trading Accounts
           </Link>
         </p>
-      </div>
+      </PageShell>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Edit Trading Account"
-        description={`Editing "${account.account_name}"`}
-        breadcrumbs={[
-          { label: 'Trading Accounts', href: '/trading-accounts' },
-          { label: account.account_name },
-        ]}
-      />
+    <PageShell
+      title="Edit Trading Account"
+      description={`Editing "${account.account_name}"`}
+      breadcrumbs={[
+        { label: 'Trading Accounts', href: '/trading-accounts' },
+        { label: account.account_name },
+      ]}
+    >
 
       {oauthStatus === 'success' && (
         <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-700">
@@ -383,6 +307,7 @@ export default function EditTradingAccountPage() {
                     field={field}
                     value={credentials[field.name] ?? ''}
                     onChange={(v) => setCredentials((prev) => ({ ...prev, [field.name]: v }))}
+                    hasSaved={field.has_value}
                   />
                 </div>
               ))}
@@ -399,6 +324,6 @@ export default function EditTradingAccountPage() {
           </div>
         </form>
       </div>
-    </div>
+    </PageShell>
   )
 }

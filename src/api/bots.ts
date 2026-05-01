@@ -1,5 +1,5 @@
-import { apiClient } from './client'
-import type { ApiResponse, Bot, PaginationMeta } from '@/types/api'
+import { apiGet, apiList, apiPost, apiPatch, apiDelete } from './client'
+import type { Bot, PaginationMeta } from '@/types/api'
 
 export interface CreateBotPayload {
   name: string
@@ -21,41 +21,34 @@ export interface BotsListResponse {
 /**
  * List all bots for current user (paginated)
  */
-export async function list(page = 1, perPage = 20, filters?: Record<string, unknown>) {
-  const response = await apiClient.get<ApiResponse<Bot[]>>(
-    '/bots',
-    { params: { page, per_page: perPage, ...filters } }
-  )
-  return response.data
+export async function list(page = 1, perPage = 20, filters?: Record<string, unknown>): Promise<BotsListResponse> {
+  return apiList<Bot>('/bots', { page, per_page: perPage, ...filters })
 }
 
 /**
  * Get single bot by ID
  */
-export async function get(id: number) {
-  const response = await apiClient.get<ApiResponse<Bot>>(`/bots/${id}`)
-  return response.data
+export async function get(id: number): Promise<Bot> {
+  return apiGet<Bot>(`/bots/${id}`)
 }
 
 /**
  * Create new bot
  */
-export async function create(payload: CreateBotPayload) {
-  const response = await apiClient.post<ApiResponse<Bot>>('/bots', payload)
-  return response.data
+export async function create(payload: CreateBotPayload): Promise<Bot> {
+  return apiPost<Bot>('/bots', payload)
 }
 
 /**
  * Update bot
  */
-export async function update(id: number, payload: UpdateBotPayload) {
-  const response = await apiClient.patch<ApiResponse<Bot>>(`/bots/${id}`, payload)
-  return response.data
+export async function update(id: number, payload: UpdateBotPayload): Promise<Bot> {
+  return apiPatch<Bot>(`/bots/${id}`, payload)
 }
 
 /**
  * Delete bot
  */
-export async function destroy(id: number) {
-  await apiClient.delete(`/bots/${id}`)
+export async function destroy(id: number): Promise<void> {
+  return apiDelete(`/bots/${id}`)
 }

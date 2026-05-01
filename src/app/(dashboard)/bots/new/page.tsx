@@ -5,8 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageShell } from '@/components/layout/PageShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useTradingAccount } from '@/hooks/useTradingAccount';
 import Link from 'next/link';
@@ -29,7 +28,7 @@ export default function CreateBotPage() {
     enabled: hasHydrated,
   });
 
-  const strategies: Strategy[] = (strategiesData as any)?.data ?? [];
+  const strategies: Strategy[] = strategiesData ?? [];
 
   // Pre-select the globally active trading account
   useEffect(() => {
@@ -60,14 +59,13 @@ export default function CreateBotPage() {
   };
 
   if (!hasHydrated || strategiesLoading || accountsLoading) {
-    return <Skeleton className="h-64 w-full" />;
+    return <PageShell title="Create Bot" isLoading />;
   }
 
   // Gate: no trading account registered
   if (!hasAccounts) {
     return (
-      <div>
-        <PageHeader title="Create Bot" description="Set up a new trading bot" />
+      <PageShell title="Create Bot" description="Set up a new trading bot">
         <div className="max-w-lg rounded-lg border border-border bg-card p-8 text-center">
           <div className="mb-3 text-4xl">🏦</div>
           <h3 className="mb-1 text-sm font-semibold text-foreground">No Trading Account Found</h3>
@@ -78,13 +76,16 @@ export default function CreateBotPage() {
             <Button size="sm">Register Trading Account</Button>
           </Link>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div>
-      <PageHeader title="Create Bot" description="Set up a new trading bot" />
+    <PageShell
+      title="Create Bot"
+      description="Set up a new trading bot"
+      breadcrumbs={[{ label: 'Bots', href: '/bots' }, { label: 'New Bot' }]}
+    >
 
       <div className="max-w-lg rounded-lg border border-border bg-card p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -195,6 +196,6 @@ export default function CreateBotPage() {
           </div>
         </form>
       </div>
-    </div>
+    </PageShell>
   );
 }

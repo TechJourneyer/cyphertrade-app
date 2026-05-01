@@ -3,11 +3,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import { DataTable } from '@/components/data-display/DataTable';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Skeleton } from '@/components/ui/skeleton';
+import { DataTable, DataTableColumn } from '@/components/data-display/DataTable';
+import { PageShell } from '@/components/layout/PageShell';
 import { useAuth } from '@/hooks/useAuth';
 import * as instrumentsApi from '@/api/instruments';
+import type { Instrument } from '@/types/api';
 
 export default function InstrumentsPage() {
   const { hasHydrated } = useAuth();
@@ -16,14 +16,13 @@ export default function InstrumentsPage() {
   const [sortBy, setSortBy] = useState('trading_symbol');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  const { data: responseData, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['instruments', page, search, sortBy, sortOrder],
     queryFn: () => instrumentsApi.list(page, 20, { search }),
     enabled: hasHydrated,
   });
-  const data = responseData as any;
 
-  const columns: any[] = [
+  const columns: DataTableColumn<Instrument>[] = [
     { key: 'trading_symbol', label: 'Symbol', sortable: true },
     { key: 'name', label: 'Company Name', sortable: true },
     { key: 'exchange', label: 'Exchange', sortable: false },
@@ -35,13 +34,11 @@ export default function InstrumentsPage() {
   ];
 
   if (!hasHydrated) {
-    return <Skeleton className="h-64 w-full" />;
+    return <PageShell title="Instruments" isLoading />;
   }
 
   return (
-    <div>
-      <PageHeader title="Instruments" description="Browse all available trading instruments" />
-      
+    <PageShell title="Instruments" description="Browse all available trading instruments">
       <div className="mb-6">
         <Input
           type="search"
@@ -70,6 +67,6 @@ export default function InstrumentsPage() {
             : undefined
         }
       />
-    </div>
+    </PageShell>
   );
 }

@@ -1,5 +1,5 @@
-import { apiClient } from './client'
-import type { ApiResponse, Strategy } from '@/types/api'
+import { apiGet, apiPost } from './client'
+import type { Strategy } from '@/types/api'
 
 export interface BacktestPayload {
   strategy: string
@@ -28,31 +28,27 @@ export interface BacktestResult {
 /**
  * List active strategies
  */
-export async function list() {
-  const response = await apiClient.get<ApiResponse<Strategy[]>>('/strategies')
-  return response.data
+export async function list(): Promise<Strategy[]> {
+  return apiGet<Strategy[]>('/strategies')
 }
 
 /**
  * Get strategy detail
  */
-export async function get(id: number) {
-  const response = await apiClient.get<ApiResponse<Strategy>>(`/strategies/${id}`)
-  return response.data
+export async function get(id: number): Promise<Strategy> {
+  return apiGet<Strategy>(`/strategies/${id}`)
 }
 
 /**
  * Get today's signals
  */
-export async function signals(id: number) {
-  const response = await apiClient.get<ApiResponse>(`/strategies/${id}/signals`)
-  return response.data
+export async function signals(id: number): Promise<unknown> {
+  return apiGet(`/strategies/${id}/signals`)
 }
 
 /**
  * Run backtest
  */
-export async function runBacktest(payload: BacktestPayload) {
-  const response = await apiClient.post<ApiResponse<BacktestResult>>('/backtest', payload)
-  return response.data
+export async function runBacktest(payload: BacktestPayload): Promise<{ report: BacktestResult | null }> {
+  return apiPost<{ report: BacktestResult | null }>('/backtest', payload)
 }

@@ -57,7 +57,7 @@ export default function TradingAccountCallbackPage() {
           return
         }
 
-        finish('success', response.message || 'Terminal connected successfully.')
+        finish('success', (response as { message?: string })?.message || 'Terminal connected successfully.')
       } catch (error) {
         if (isCancelled) {
           return

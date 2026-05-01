@@ -18,8 +18,8 @@ export function useTradingAccount() {
     staleTime: 60_000,
   })
 
-  // API returns { success, message, data: TradingAccount[], meta } (flat envelope)
-  const accounts: TradingAccount[] = (rawData as any)?.data ?? []
+  // api.list() returns TradingAccountsListResponse = { data: TradingAccount[], meta }
+  const accounts: TradingAccount[] = rawData?.data ?? []
 
   useEffect(() => {
     if (accounts.length === 0) return

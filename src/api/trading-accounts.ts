@@ -1,5 +1,5 @@
-import { apiClient } from './client'
-import type { ApiResponse, TradingAccount, PaginationMeta } from '@/types/api'
+import { apiGet, apiList, apiPost, apiPatch } from './client'
+import type { TradingAccount, PaginationMeta } from '@/types/api'
 
 export interface CredentialField {
   name:             string
@@ -32,61 +32,43 @@ export interface TradingAccountsListResponse {
 /**
  * List all trading accounts for current user
  */
-export async function list(page = 1, perPage = 20) {
-  const response = await apiClient.get<ApiResponse<TradingAccountsListResponse>>(
-    '/trading-accounts',
-    { params: { page, per_page: perPage } }
-  )
-  return response.data
+export async function list(page = 1, perPage = 20): Promise<TradingAccountsListResponse> {
+  return apiList<TradingAccount>('/trading-accounts', { page, per_page: perPage })
 }
 
 /**
  * Get single trading account
  */
-export async function get(id: number) {
-  const response = await apiClient.get<ApiResponse<TradingAccount>>(`/trading-accounts/${id}`)
-  return response.data
+export async function get(id: number): Promise<TradingAccount> {
+  return apiGet<TradingAccount>(`/trading-accounts/${id}`)
 }
 
 /**
  * Create trading account
  */
-export async function create(payload: CreateTradingAccountPayload) {
-  const response = await apiClient.post<ApiResponse<TradingAccount>>(
-    '/trading-accounts',
-    payload
-  )
-  return response.data
+export async function create(payload: CreateTradingAccountPayload): Promise<TradingAccount> {
+  return apiPost<TradingAccount>('/trading-accounts', payload)
 }
 
 /**
  * Update trading account
  */
-export async function update(id: number, payload: UpdateTradingAccountPayload) {
-  const response = await apiClient.patch<ApiResponse<TradingAccount>>(
-    `/trading-accounts/${id}`,
-    payload
-  )
-  return response.data
+export async function update(id: number, payload: UpdateTradingAccountPayload): Promise<TradingAccount> {
+  return apiPatch<TradingAccount>(`/trading-accounts/${id}`, payload)
 }
 
 /**
  * Get credential field definitions (not values) for a given account
  */
-export async function getCredentialsSchema(id: number) {
-  const response = await apiClient.get<ApiResponse<{ fields: CredentialField[] }>>(`/trading-accounts/${id}/credentials`)
-  return response.data
+export async function getCredentialsSchema(id: number): Promise<{ fields: CredentialField[] }> {
+  return apiGet<{ fields: CredentialField[] }>(`/trading-accounts/${id}/credentials`)
 }
 
 /**
  * Exchange OAuth code for access token and persist it
  */
-export async function saveAccessToken(id: number, code: string) {
-  const response = await apiClient.post<ApiResponse>(
-    `/trading-accounts/${id}/access-token`,
-    { code }
-  )
-  return response.data
+export async function saveAccessToken(id: number, code: string): Promise<unknown> {
+  return apiPost(`/trading-accounts/${id}/access-token`, { code })
 }
 
 /**
@@ -96,19 +78,13 @@ export async function getRedirectUrl(id: number): Promise<string | undefined> {
   if (typeof id !== 'number' || Number.isNaN(id)) {
     throw new Error('Invalid trading account id')
   }
-
-  const response = await apiClient.get<ApiResponse<{ login_url: string }>>(
-    `/trading-accounts/${id}/redirect`
-  )
-  return response.data.data?.login_url
+  const result = await apiGet<{ login_url: string }>(`/trading-accounts/${id}/redirect`)
+  return result.login_url
 }
 
 /**
  * Disconnect (stop) the terminal — clears auth_code, resets auth_status to inactive
  */
-export async function disconnect(id: number) {
-  const response = await apiClient.post<ApiResponse<TradingAccount>>(
-    `/trading-accounts/${id}/disconnect`
-  )
-  return response.data
+export async function disconnect(id: number): Promise<TradingAccount> {
+  return apiPost<TradingAccount>(`/trading-accounts/${id}/disconnect`)
 }

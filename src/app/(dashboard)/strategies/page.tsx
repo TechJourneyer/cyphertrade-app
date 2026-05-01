@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageShell } from '@/components/layout/PageShell';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { FormField } from '@/components/forms/FormField';
@@ -23,7 +23,7 @@ export default function StrategiesPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState('');
 
-  const { data: strategiesData, isLoading: strategiesLoading } = useQuery({
+  const { data: strategies, isLoading: strategiesLoading } = useQuery({
     queryKey: ['strategies'],
     queryFn: () => strategiesApi.list(),
     enabled: hasHydrated,
@@ -34,15 +34,14 @@ export default function StrategiesPage() {
     queryFn: () => accountsApi.list(1, 100),
     enabled: hasHydrated,
   });
-  const accountOptions = (accountsData as any)?.data?.data?.map((a: any) => ({
+  const accountOptions = accountsData?.data?.map((a) => ({
     label: a.account_name,
     value: String(a.id),
-  })) || [];
-  const strategies = strategiesData as any;
-  const strategyOptions = strategies?.data?.map((s: any) => ({
+  })) ?? [];
+  const strategyOptions = strategies?.map((s) => ({
     label: s.name,
     value: s.code,
-  })) || [];
+  })) ?? [];
 
   const handleRunBacktest = async () => {
     setError('');
@@ -64,7 +63,7 @@ export default function StrategiesPage() {
         investment_amount: investmentAmount,
         ...(formData.trading_account_id ? { trading_account_id: Number(formData.trading_account_id) } : {}),
       });
-      setBacktestResults(results.data?.report ?? null);
+      setBacktestResults(results?.report ?? null);
     } catch (err) {
       console.error('Backtest failed:', err);
       setError(err instanceof Error ? err.message : 'Backtest failed. Please try again.');
@@ -74,12 +73,11 @@ export default function StrategiesPage() {
   };
 
   if (!hasHydrated || strategiesLoading) {
-    return <Skeleton className="h-64 w-full" />;
+    return <PageShell title="Strategies" isLoading />;
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Strategies" description="Backtest and analyze trading strategies" />
+    <PageShell title="Strategies" description="Backtest and analyze trading strategies">
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Strategy List */}
@@ -89,7 +87,7 @@ export default function StrategiesPage() {
           </CardHeader>
           <CardContent>
             <ul className="space-y-2">
-            {strategies?.data?.map((strategy: any) => (
+            {strategies?.map((strategy) => (
               <li
                 key={strategy.id}
                 className="rounded border border-border bg-secondary/30 px-3 py-2 text-sm text-foreground"
@@ -187,6 +185,6 @@ export default function StrategiesPage() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageShell>
   );
 }

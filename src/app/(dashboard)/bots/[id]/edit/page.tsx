@@ -6,8 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageShell } from '@/components/layout/PageShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useTradingAccount } from '@/hooks/useTradingAccount';
 import * as botsApi from '@/api/bots';
@@ -47,8 +46,8 @@ export default function EditBotPage() {
     enabled: hasHydrated,
   });
 
-  const bot = (botResponse as any)?.data;
-  const strategies: Strategy[] = (strategiesData as any)?.data ?? [];
+  const bot = botResponse;
+  const strategies: Strategy[] = strategiesData ?? [];
 
   // Prefill form once bot data is available
   useEffect(() => {
@@ -91,33 +90,31 @@ export default function EditBotPage() {
   const isLoading = !hasHydrated || botLoading || strategiesLoading || accountsLoading;
 
   if (isLoading) {
-    return <Skeleton className="h-64 w-full" />;
+    return <PageShell title="Edit Bot" isLoading />;
   }
 
   if (!bot) {
     return (
-      <div>
-        <PageHeader title="Edit Bot" description="Bot not found" />
+      <PageShell title="Edit Bot" description="Bot not found">
         <p className="text-sm text-muted-foreground">
           The bot you are looking for does not exist.{' '}
           <Link href="/bots" className="text-primary underline underline-offset-2">
             Back to Bots
           </Link>
         </p>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Edit Bot"
-        description={`Editing "${bot.name}"`}
-        breadcrumbs={[
-          { label: 'Bots', href: '/bots' },
-          { label: bot.name },
-        ]}
-      />
+    <PageShell
+      title="Edit Bot"
+      description={`Editing "${bot.name}"`}
+      breadcrumbs={[
+        { label: 'Bots', href: '/bots' },
+        { label: bot.name },
+      ]}
+    >
 
       <div className="max-w-lg rounded-lg border border-border bg-card p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -235,6 +232,6 @@ export default function EditBotPage() {
           </div>
         </form>
       </div>
-    </div>
+    </PageShell>
   );
 }

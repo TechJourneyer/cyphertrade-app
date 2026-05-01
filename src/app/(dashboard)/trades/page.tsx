@@ -2,11 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { DataTable } from '@/components/data-display/DataTable';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Skeleton } from '@/components/ui/skeleton';
+import { DataTable, DataTableColumn } from '@/components/data-display/DataTable';
+import { PageShell } from '@/components/layout/PageShell';
 import { useAuth } from '@/hooks/useAuth';
 import * as tradesApi from '@/api/trades';
+import type { Trade } from '@/types/api';
 
 export default function TradesPage() {
   const { hasHydrated } = useAuth();
@@ -14,14 +14,13 @@ export default function TradesPage() {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const { data: responseData, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['trades', page, sortBy, sortOrder],
     queryFn: () => tradesApi.list(page, 20),
     enabled: hasHydrated,
   });
-  const data = responseData as any;
 
-  const columns: any[] = [
+  const columns: DataTableColumn<Trade>[] = [
     { key: 'instrument', label: 'Symbol', sortable: false, render: (_: unknown, row: any) => row.instrument?.trading_symbol ?? '—' },
     { key: 'signal', label: 'Signal', sortable: true },
     { key: 'quantity', label: 'Quantity', sortable: false },
@@ -30,18 +29,17 @@ export default function TradesPage() {
     { key: 'pnl', label: 'P&L', sortable: true, render: (value: unknown) => {
       const n = Number(value);
       if (value === null || value === undefined || isNaN(n)) return '—';
-      return <span className={n >= 0 ? 'text-green-600 font-semibold' : 'text-red-600 font-semibold'}>₹{n.toFixed(2)}</span>;
+      return <span className={`font-semibold font-mono ${n >= 0 ? 'text-gain' : 'text-loss'}`}>₹{n.toFixed(2)}</span>;
     } },
     { key: 'status', label: 'Status', sortable: true },
   ];
 
   if (!hasHydrated) {
-    return <Skeleton className="h-64 w-full" />;
+    return <PageShell title="Trades" isLoading />;
   }
 
   return (
-    <div>
-      <PageHeader title="Trades" description="View your trading history and performance" />
+    <PageShell title="Trades" description="View your trading history and performance">
       <DataTable
         columns={columns}
         data={data?.data || []}
@@ -51,6 +49,6 @@ export default function TradesPage() {
         sortOrder={sortOrder}
         onSort={(key) => setSortBy(key)}
       />
-    </div>
+    </PageShell>
   );
 }

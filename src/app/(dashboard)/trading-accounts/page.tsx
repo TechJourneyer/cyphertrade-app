@@ -5,48 +5,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageShell } from '@/components/layout/PageShell';
 import { EmptyState } from '@/components/data-display/EmptyState';
 import { TradingAccountCard, TradingAccountCardSkeleton } from '@/components/data-display/TradingAccountCard';
+import { Pagination } from '@/components/data-display/Pagination';
 import { useAuth } from '@/hooks/useAuth';
 import * as tradingAccountsApi from '@/api/trading-accounts';
 import type { TradingAccount, PaginationMeta } from '@/types/api';
 
 const PAGE_SIZE = 10;
-
-function Pagination({
-  meta,
-  onPageChange,
-}: {
-  meta: PaginationMeta;
-  onPageChange: (page: number) => void;
-}) {
-  if (meta.last_page <= 1) return null;
-  return (
-    <div className="mt-8 flex items-center justify-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={meta.current_page <= 1}
-        onClick={() => onPageChange(meta.current_page - 1)}
-      >
-        Previous
-      </Button>
-      <span className="text-xs text-muted-foreground px-2">
-        Page {meta.current_page} of {meta.last_page}
-      </span>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={meta.current_page >= meta.last_page}
-        onClick={() => onPageChange(meta.current_page + 1)}
-      >
-        Next
-      </Button>
-    </div>
-  );
-}
 
 export default function TradingAccountsPage() {
   const { hasHydrated } = useAuth();
@@ -58,29 +25,23 @@ export default function TradingAccountsPage() {
     enabled: hasHydrated,
   });
 
-  const listData = (responseData as any)?.data;
-  const accounts: TradingAccount[] = Array.isArray(listData)
-    ? listData
-    : Array.isArray(listData?.data)
-      ? listData.data
-      : [];
-  const meta: PaginationMeta | undefined = (responseData as any)?.meta;
+  const accounts: TradingAccount[] = responseData?.data ?? [];
+  const meta: PaginationMeta | undefined = responseData?.meta;
 
   if (!hasHydrated) {
-    return <Skeleton className="h-64 w-full" />;
+    return <PageShell title="Trading Accounts" isLoading />;
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Trading Accounts"
-        description="Manage your trading accounts and credentials"
-        actions={
-          <Link href="/trading-accounts/new">
-            <Button size="sm">New Account</Button>
-          </Link>
-        }
-      />
+    <PageShell
+      title="Trading Accounts"
+      description="Manage your trading accounts and credentials"
+      actions={
+        <Link href="/trading-accounts/new">
+          <Button size="sm">New Account</Button>
+        </Link>
+      }
+    >
 
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -109,6 +70,6 @@ export default function TradingAccountsPage() {
           {meta && <Pagination meta={meta} onPageChange={setPage} />}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

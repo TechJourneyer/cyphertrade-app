@@ -5,116 +5,17 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageShell } from '@/components/layout/PageShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useQueryClient } from '@tanstack/react-query';
 import * as tradingAccountsApi from '@/api/trading-accounts';
-import type { CredentialField } from '@/api/trading-accounts';
-
-// ─── Inline toggle switch ─────────────────────────────────────────────────────
-
-function ToggleSwitch({
-  checked,
-  onChange,
-  label,
-  onLabel = 'Active',
-  offLabel = 'Inactive',
-}: {
-  checked: boolean
-  onChange: (v: boolean) => void
-  label: string
-  onLabel?: string
-  offLabel?: string
-}) {
-  return (
-    <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
-      <div>
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{checked ? onLabel : offLabel}</p>
-      </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-          checked ? 'bg-primary' : 'bg-muted'
-        }`}
-      >
-        <span
-          className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-background shadow-lg transform transition-transform ${
-            checked ? 'translate-x-5' : 'translate-x-0'
-          }`}
-        />
-      </button>
-    </div>
-  )
-}
-
-// ─── Client-side credential schemas (mirrors config/trading-apps.php) ────────
-
-const CREDENTIAL_FIELDS: Record<string, CredentialField[]> = {
-  upstox: [
-    { name: 'accessKeyId',     label: 'Access Key ID',     type: 'text',     required: true  },
-    { name: 'secretAccessKey', label: 'Secret Access Key', type: 'password', required: true  },
-    { name: 'userId',          label: 'Broker User ID',    type: 'text',     required: true  },
-    {
-      name: 'sandboxEnabled',
-      label: 'Sandbox Mode',
-      type: 'select',
-      required: true,
-      options: { '1': 'Yes', '0': 'No' },
-    },
-    { name: 'sandboxToken',    label: 'Sandbox Token',     type: 'password', required: false },
-  ],
-  zerodha: [
-    { name: 'accessKeyId',     label: 'Access Key ID',     type: 'text',     required: true },
-    { name: 'secretAccessKey', label: 'Secret Access Key', type: 'password', required: true },
-    { name: 'userId',          label: 'Broker User ID',    type: 'text',     required: true },
-  ],
-}
-
-const BROKER_OPTIONS = [
-  { value: 'upstox',  label: 'Upstox'  },
-  { value: 'zerodha', label: 'Zerodha' },
-]
-
-// ─── Credential field renderer ────────────────────────────────────────────────
-
-function CredentialInput({
-  field,
-  value,
-  onChange,
-}: {
-  field: CredentialField
-  value: string
-  onChange: (value: string) => void
-}) {
-  const baseClass =
-    'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50'
-
-  if ((field.type === 'select' || field.type === 'select2') && field.options) {
-    return (
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={baseClass} required={field.required}>
-        <option value="">Select…</option>
-        {Object.entries(field.options).map(([k, v]) => (
-          <option key={k} value={k}>{v}</option>
-        ))}
-      </select>
-    )
-  }
-
-  return (
-    <Input
-      type={field.type === 'password' ? 'password' : 'text'}
-      required={field.required}
-      placeholder={`Enter ${field.label}`}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
-  )
-}
+import {
+  ToggleSwitch,
+  CredentialInput,
+  CREDENTIAL_FIELDS,
+  BROKER_OPTIONS,
+  SELECT_CLASS,
+} from '@/components/forms/trading-account-fields';
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -130,7 +31,7 @@ export default function CreateTradingAccountPage() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (!hasHydrated) return <Skeleton className="h-64 w-full" />
+  if (!hasHydrated) return <PageShell title="New Trading Account" isLoading />
 
   const credentialFields = CREDENTIAL_FIELDS[appName] ?? []
 
@@ -161,15 +62,14 @@ export default function CreateTradingAccountPage() {
   }
 
   return (
-    <div>
-      <PageHeader
-        title="New Trading Account"
-        description="Register a new broker trading account"
-        breadcrumbs={[
-          { label: 'Trading Accounts', href: '/trading-accounts' },
-          { label: 'New Account' },
-        ]}
-      />
+    <PageShell
+      title="New Trading Account"
+      description="Register a new broker trading account"
+      breadcrumbs={[
+        { label: 'Trading Accounts', href: '/trading-accounts' },
+        { label: 'New Account' },
+      ]}
+    >
 
       <div className="max-w-lg rounded-lg border border-border bg-card p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -197,7 +97,7 @@ export default function CreateTradingAccountPage() {
               required
               value={appName}
               onChange={(e) => handleBrokerChange(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className={SELECT_CLASS}
             >
               <option value="">Select a broker…</option>
               {BROKER_OPTIONS.map((o) => (
@@ -254,6 +154,6 @@ export default function CreateTradingAccountPage() {
           </div>
         </form>
       </div>
-    </div>
+    </PageShell>
   )
 }

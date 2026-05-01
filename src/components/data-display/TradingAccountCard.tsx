@@ -29,7 +29,7 @@ function formatDate(dateStr: string | null): string {
 }
 
 export function TradingAccountCard({ account }: TradingAccountCardProps) {
-  const statusLabel = account.status === 1 ? 'active' : 'inactive'
+  const statusLabel = String(account.status) === '1' ? 'active' : 'inactive'
 
   return (
     <Card className="group flex flex-col transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5">

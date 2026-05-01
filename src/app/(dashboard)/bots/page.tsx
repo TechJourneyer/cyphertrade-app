@@ -5,48 +5,15 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { PageHeader } from '@/components/layout/PageHeader';
-import { Skeleton } from '@/components/ui/skeleton';
+import { PageShell } from '@/components/layout/PageShell';
 import { EmptyState } from '@/components/data-display/EmptyState';
 import { BotCard, BotCardSkeleton } from '@/components/data-display/BotCard';
+import { Pagination } from '@/components/data-display/Pagination';
 import { useAuth } from '@/hooks/useAuth';
 import * as botsApi from '@/api/bots';
 import type { Bot as BotType, PaginationMeta } from '@/types/api';
 
 const PAGE_SIZE = 10;
-
-function Pagination({
-  meta,
-  onPageChange,
-}: {
-  meta: PaginationMeta;
-  onPageChange: (page: number) => void;
-}) {
-  if (meta.last_page <= 1) return null;
-  return (
-    <div className="mt-8 flex items-center justify-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={meta.current_page <= 1}
-        onClick={() => onPageChange(meta.current_page - 1)}
-      >
-        Previous
-      </Button>
-      <span className="text-xs text-muted-foreground px-2">
-        Page {meta.current_page} of {meta.last_page}
-      </span>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={meta.current_page >= meta.last_page}
-        onClick={() => onPageChange(meta.current_page + 1)}
-      >
-        Next
-      </Button>
-    </div>
-  );
-}
 
 export default function BotsPage() {
   const { hasHydrated } = useAuth();
@@ -60,24 +27,20 @@ export default function BotsPage() {
     enabled: hasHydrated,
   });
 
-  const bots: BotType[] = (responseData as any)?.data ?? [];
-  const meta: PaginationMeta | undefined = (responseData as any)?.meta;
-
-  if (!hasHydrated) {
-    return <Skeleton className="h-64 w-full" />;
-  }
+  const bots: BotType[] = responseData?.data ?? [];
+  const meta: PaginationMeta | undefined = responseData?.meta;
 
   return (
-    <div>
-      <PageHeader
-        title="Bots"
-        description="Manage your trading bots"
-        actions={
-          <Link href="/bots/new">
-            <Button size="sm">New Bot</Button>
-          </Link>
-        }
-      />
+    <PageShell
+      title="Bots"
+      description="Manage your trading bots"
+      isLoading={!hasHydrated}
+      actions={
+        <Link href="/bots/new">
+          <Button size="sm">New Bot</Button>
+        </Link>
+      }
+    >
 
       {/* Card grid */}
       {isLoading ? (
@@ -107,6 +70,6 @@ export default function BotsPage() {
           {meta && <Pagination meta={meta} onPageChange={setPage} />}
         </>
       )}
-    </div>
+    </PageShell>
   );
 }

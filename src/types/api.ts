@@ -215,6 +215,7 @@ export interface LiveMarketTick {
 export interface Strategy {
   id:          number
   name:        string
+  code:        string
   description: string | null
   is_active:   boolean
   params:      Record<string, unknown>

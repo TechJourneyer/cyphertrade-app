@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { getDashboard } from '@/api/dashboard'
 import { useLiveMarketPolling } from '@/hooks/useLiveMarketPolling'
-import { PageHeader } from '@/components/layout/PageHeader'
+import { PageShell } from '@/components/layout/PageShell'
 import { StatCard } from '@/components/data-display/StatCard'
 import { StaleIndicator } from '@/components/data-display/StaleIndicator'
 import { ErrorState } from '@/components/data-display/ErrorState'
@@ -51,12 +51,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <PageHeader
-        title="Dashboard"
-        description="Overview of your trading operations"
-        breadcrumbs={[{ label: 'Dashboard' }]}
-        actions={
+    <PageShell
+      title="Dashboard"
+      description="Overview of your trading operations"
+      breadcrumbs={[{ label: 'Dashboard' }]}
+      actions={
           <div className="flex items-center gap-3">
             {/* Market status */}
             {isPending ? (
@@ -88,7 +87,7 @@ export default function DashboardPage() {
             </button>
           </div>
         }
-      />
+      >
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
@@ -184,6 +183,6 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-    </div>
+    </PageShell>
   )
 }

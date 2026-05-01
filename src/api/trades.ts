@@ -1,5 +1,5 @@
-import { apiClient } from './client'
-import type { ApiResponse, Trade, PaginationMeta } from '@/types/api'
+import { apiGet, apiList } from './client'
+import type { Trade, PaginationMeta } from '@/types/api'
 
 export interface TradesListResponse {
   data: Trade[]
@@ -17,25 +17,20 @@ export interface TradeFilters {
 /**
  * List trades with filters
  */
-export async function list(page = 1, perPage = 20, filters?: TradeFilters) {
-  const response = await apiClient.get<ApiResponse<TradesListResponse>>('/trades', {
-    params: { page, per_page: perPage, ...filters },
-  })
-  return response.data
+export async function list(page = 1, perPage = 20, filters?: TradeFilters): Promise<TradesListResponse> {
+  return apiList<Trade>('/trades', { page, per_page: perPage, ...filters })
 }
 
 /**
  * Get trade detail with orders
  */
-export async function get(id: number) {
-  const response = await apiClient.get<ApiResponse<Trade>>(`/trades/${id}`)
-  return response.data
+export async function get(id: number): Promise<Trade> {
+  return apiGet<Trade>(`/trades/${id}`)
 }
 
 /**
  * Get trade logs
  */
-export async function logs(id: number) {
-  const response = await apiClient.get<ApiResponse>(`/trades/${id}/logs`)
-  return response.data
+export async function logs(id: number): Promise<unknown> {
+  return apiGet(`/trades/${id}/logs`)
 }

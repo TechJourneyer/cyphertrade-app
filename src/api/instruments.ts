@@ -1,5 +1,5 @@
-import { apiClient } from './client'
-import type { ApiResponse, Instrument, LiveMarketTick, PaginationMeta } from '@/types/api'
+import { apiGet, apiList } from './client'
+import type { Instrument, LiveMarketTick, PaginationMeta } from '@/types/api'
 
 export interface InstrumentsListResponse {
   data: (Instrument & { market_data?: LiveMarketTick })[]
@@ -27,30 +27,22 @@ export interface ScreenerListResponse {
 /**
  * List all instruments (paginated, searchable)
  */
-export async function list(page = 1, perPage = 50, filters?: { search?: string }) {
-  const response = await apiClient.get<ApiResponse<InstrumentsListResponse>>(
-    '/instruments',
-    { params: { page, per_page: perPage, ...filters } }
-  )
-  return response.data
+export async function list(page = 1, perPage = 50, filters?: { search?: string }): Promise<InstrumentsListResponse> {
+  return apiList<Instrument & { market_data?: LiveMarketTick }>('/instruments', { page, per_page: perPage, ...filters })
 }
 
 /**
  * Get instrument with live market data
  */
-export async function get(id: number) {
-  const response = await apiClient.get<ApiResponse<Instrument>>(`/instruments/${id}/details`)
-  return response.data
+export async function get(id: number): Promise<Instrument> {
+  return apiGet<Instrument>(`/instruments/${id}/details`)
 }
 
 export const screener = {
   /**
    * Get screener results with filters
    */
-  results: async (page = 1, perPage = 30, filters?: Record<string, string>) => {
-    const response = await apiClient.get<ApiResponse<ScreenerListResponse>>('/screener', {
-      params: { page, per_page: perPage, ...filters },
-    })
-    return response.data
+  results: async (page = 1, perPage = 30, filters?: Record<string, string>): Promise<ScreenerListResponse> => {
+    return apiList<ScreenerResult>('/screener', { page, per_page: perPage, ...filters })
   },
 }

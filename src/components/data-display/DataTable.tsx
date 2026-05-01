@@ -16,7 +16,7 @@ export interface DataTablePaginationProps {
   onPageChange: (page: number) => void
 }
 
-export interface DataTableProps<T extends Record<string, unknown>> {
+export interface DataTableProps<T extends object> {
   columns: DataTableColumn<T>[]
   data: T[]
   isLoading?: boolean
@@ -29,7 +29,7 @@ export interface DataTableProps<T extends Record<string, unknown>> {
   pagination?: DataTablePaginationProps
 }
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends object>({
   columns,
   data,
   isLoading = false,
@@ -114,7 +114,7 @@ export function DataTable<T extends Record<string, unknown>>({
             <tr key={idx} className="border-b border-border hover:bg-secondary/50 transition-colors">
               {columns.map((col) => (
                 <td key={String(col.key)} className={`px-4 py-3 text-foreground ${col.className}`}>
-                  {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? '—')}
+                  {col.render ? col.render((row as Record<string | symbol, unknown>)[col.key as string | symbol], row) : String((row as Record<string | symbol, unknown>)[col.key as string | symbol] ?? '—')}
                 </td>
               ))}
             </tr>
