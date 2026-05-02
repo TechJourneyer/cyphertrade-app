@@ -25,6 +25,7 @@ export default function InstrumentsPage() {
   const columns: DataTableColumn<Instrument>[] = [
     { key: 'trading_symbol', label: 'Symbol', sortable: true },
     { key: 'name', label: 'Company Name', sortable: true },
+    { key: 'instrument_key', label: 'Instrument Key', sortable: true },
     { key: 'exchange', label: 'Exchange', sortable: false },
     { key: 'market_data', label: 'LTP', sortable: false, render: (_: unknown, row: any) =>
       row.market_data ? `₹${Number(row.market_data.last_price).toFixed(2)}` : '—'
