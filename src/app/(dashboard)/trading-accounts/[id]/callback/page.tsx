@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import * as tradingAccountsApi from '@/api/trading-accounts'
@@ -12,6 +12,8 @@ export default function TradingAccountCallbackPage() {
 
   const [statusText, setStatusText] = useState('Processing broker callback...')
 
+  const exchangeAttempted = useRef(false)
+
   const accountId = useMemo(() => {
     const rawId = params?.id
     const parsed = Number(rawId)
@@ -19,6 +21,9 @@ export default function TradingAccountCallbackPage() {
   }, [params])
 
   useEffect(() => {
+    if (exchangeAttempted.current) return
+    exchangeAttempted.current = true
+
     let isCancelled = false
 
     const finish = (status: 'success' | 'error', message: string) => {
@@ -50,21 +55,14 @@ export default function TradingAccountCallbackPage() {
       }
 
       try {
-        setStatusText('Saving access token for your account...')
+        if (!isCancelled) setStatusText('Saving access token for your account...')
         const response = await tradingAccountsApi.saveAccessToken(accountId, code)
-
-        if (isCancelled) {
-          return
-        }
 
         finish('success', (response as { message?: string })?.message || 'Terminal connected successfully.')
       } catch (error) {
-        if (isCancelled) {
-          return
-        }
-
-        const message =
-          error instanceof Error ? error.message : 'Failed to complete broker authentication.'
+        // Do NOT check isCancelled here — always navigate away on failure too.
+        const apiMessage = (error as { response?: { data?: { message?: string } } })?.response?.data?.message
+        const message = apiMessage ?? (error instanceof Error ? error.message : 'Failed to complete broker authentication.')
 
         finish('error', message)
       }
