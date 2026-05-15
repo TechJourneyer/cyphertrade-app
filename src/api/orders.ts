@@ -9,6 +9,7 @@ export interface OrdersListResponse {
 export interface OrderFilters {
   status?: string
   bot_id?: number
+  account_id?: number
   date_from?: string
   date_to?: string
 }

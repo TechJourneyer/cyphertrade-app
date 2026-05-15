@@ -1,6 +1,6 @@
 'use client'
 
-import { LogOut, User, Settings, Bell, ChevronsUpDown, Plus } from 'lucide-react'
+import { LogOut, User, Settings, Bell, ChevronsUpDown, Plus, PencilLine } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTradingAccount } from '@/hooks/useTradingAccount'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -31,7 +31,14 @@ function getInitials(name: string): string {
 
 export function Topbar({ className }: TopbarProps) {
   const { user, logout } = useAuth()
-  const { accounts, activeAccount, setActiveAccountId, hasAccounts, isLoading: accountsLoading } = useTradingAccount()
+  const {
+    accounts,
+    activeAccount,
+    setActiveAccountId,
+    hasAccounts,
+    isLoading: accountsLoading,
+    isAllAccounts,
+  } = useTradingAccount()
 
   return (
     <header
@@ -64,7 +71,7 @@ export function Topbar({ className }: TopbarProps) {
                   )}
                 />
                 <span className="max-w-[160px] truncate text-xs font-medium text-foreground">
-                  {activeAccount?.account_name ?? 'Select Account'}
+                  {isAllAccounts ? 'All Accounts' : activeAccount?.account_name ?? 'Select Account'}
                 </span>
                 <ChevronsUpDown className="h-3 w-3 text-muted-foreground shrink-0" />
               </button>
@@ -74,13 +81,25 @@ export function Topbar({ className }: TopbarProps) {
                 Switch Trading Account
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setActiveAccountId('all')}
+                className={cn('flex items-center gap-2', isAllAccounts && 'bg-secondary')}
+              >
+                <span className="h-1.5 w-1.5 rounded-full shrink-0 bg-primary" />
+                <span className="flex-1 truncate">All Accounts</span>
+                {isAllAccounts && (
+                  <Badge variant="outline" className="h-3.5 px-1 py-0 text-[10px]">
+                    active
+                  </Badge>
+                )}
+              </DropdownMenuItem>
               {accounts.map((acc) => (
                 <DropdownMenuItem
                   key={acc.id}
                   onClick={() => setActiveAccountId(acc.id)}
                   className={cn(
                     'flex items-center gap-2',
-                    acc.id === activeAccount?.id && 'bg-secondary',
+                    !isAllAccounts && acc.id === activeAccount?.id && 'bg-secondary',
                   )}
                 >
                   <span
@@ -90,7 +109,7 @@ export function Topbar({ className }: TopbarProps) {
                     )}
                   />
                   <span className="flex-1 truncate">{acc.account_name}</span>
-                  {acc.id === activeAccount?.id && (
+                  {!isAllAccounts && acc.id === activeAccount?.id && (
                     <Badge variant="outline" className="h-3.5 px-1 py-0 text-[10px]">
                       active
                     </Badge>
@@ -98,6 +117,14 @@ export function Topbar({ className }: TopbarProps) {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
+              {activeAccount && !isAllAccounts && (
+                <DropdownMenuItem asChild>
+                  <Link href={`/trading-accounts/${activeAccount.id}/edit`} className="flex items-center gap-2">
+                    <PencilLine className="h-3.5 w-3.5" />
+                    Edit Selected Account
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem asChild>
                 <Link href="/trading-accounts" className="flex items-center gap-2">
                   <Settings className="h-3.5 w-3.5" />

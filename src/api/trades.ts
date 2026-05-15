@@ -9,6 +9,7 @@ export interface TradesListResponse {
 export interface TradeFilters {
   status?: string
   bot_id?: number
+  account_id?: number
   signal?: string
   date_from?: string
   date_to?: string

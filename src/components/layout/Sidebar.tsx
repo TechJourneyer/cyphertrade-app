@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Bot,
-  CreditCard,
   ClipboardList,
   TrendingUp,
   BookOpen,
@@ -44,7 +43,6 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Trading',
     items: [
       { label: 'Bots',             href: '/bots',             icon: Bot },
-      { label: 'Accounts',         href: '/trading-accounts', icon: CreditCard },
       { label: 'Orders',           href: '/orders',           icon: ClipboardList },
       { label: 'Trades',           href: '/trades',           icon: TrendingUp },
     ],

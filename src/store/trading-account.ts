@@ -2,11 +2,11 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 
 interface TradingAccountState {
-  activeAccountId: number | null
+  activeAccountId: number | 'all' | null
 }
 
 interface TradingAccountActions {
-  setActiveAccountId: (id: number | null) => void
+  setActiveAccountId: (id: number | 'all' | null) => void
 }
 
 export const useTradingAccountStore = create<TradingAccountState & TradingAccountActions>()(

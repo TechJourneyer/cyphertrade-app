@@ -8,15 +8,17 @@ export interface InstrumentsListResponse {
 
 export interface ScreenerResult {
   id: number
-  instrument_key: string
-  trading_symbol: string
-  name: string
-  scanner_type: string
-  trend: string
+  scanner: string
+  scan_date: string
+  trend_direction: string
+  trade_indicator: string
   priority: number
-  price: number
-  change_percent: number
-  scanned_at: string
+  instrument: {
+    id: number
+    name: string
+    trading_symbol: string
+    exchange: string
+  } | null
 }
 
 export interface ScreenerListResponse {
@@ -27,7 +29,11 @@ export interface ScreenerListResponse {
 /**
  * List all instruments (paginated, searchable)
  */
-export async function list(page = 1, perPage = 50, filters?: { search?: string }): Promise<InstrumentsListResponse> {
+export async function list(
+  page = 1,
+  perPage = 50,
+  filters?: { search?: string; status?: string },
+): Promise<InstrumentsListResponse> {
   return apiList<Instrument & { market_data?: LiveMarketTick }>('/instruments', { page, per_page: perPage, ...filters })
 }
 

@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   Bot,
-  CreditCard,
   TrendingUp,
   ClipboardList,
   Activity,
@@ -12,6 +11,7 @@ import {
 } from 'lucide-react'
 import { getDashboard } from '@/api/dashboard'
 import { useLiveMarketPolling } from '@/hooks/useLiveMarketPolling'
+import { useTradingAccount } from '@/hooks/useTradingAccount'
 import { PageShell } from '@/components/layout/PageShell'
 import { StatCard } from '@/components/data-display/StatCard'
 import { StaleIndicator } from '@/components/data-display/StaleIndicator'
@@ -19,25 +19,26 @@ import { ErrorState } from '@/components/data-display/ErrorState'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import type { Metadata } from 'next'
 
 export default function DashboardPage() {
+  const { activeAccount, activeAccountId, hasAccounts, isAllAccounts } = useTradingAccount()
+
   const {
     data,
     isPending,
     isError,
     refetch,
-    dataUpdatedAt,
   } = useQuery({
-    queryKey: ['dashboard'],
-    queryFn:  getDashboard,
+    queryKey: ['dashboard', activeAccountId],
+    queryFn: () => getDashboard(activeAccountId),
+    enabled: hasAccounts || isAllAccounts,
     staleTime: 30_000,
   })
 
   const { ticks, isStale, isPending: liveMarketPending } = useLiveMarketPolling()
 
-  const lastSyncLabel = dataUpdatedAt
-    ? new Date(dataUpdatedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const lastSyncLabel = data?.last_sync_at
+    ? new Date(data.last_sync_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     : null
 
   if (isError) {
@@ -53,7 +54,13 @@ export default function DashboardPage() {
   return (
     <PageShell
       title="Dashboard"
-      description="Overview of your trading operations"
+      description={
+        isAllAccounts
+          ? 'Portfolio-wide overview across all trading accounts'
+          : hasAccounts
+          ? `Overview for selected account: ${activeAccount?.account_name ?? '—'}`
+          : 'Add a trading account from top bar to view account-specific dashboard metrics'
+      }
       breadcrumbs={[{ label: 'Dashboard' }]}
       actions={
           <div className="flex items-center gap-3">
@@ -90,17 +97,11 @@ export default function DashboardPage() {
       >
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           label="Active Bots"
           value={data?.active_bots}
           icon={Bot}
-          loading={isPending}
-        />
-        <StatCard
-          label="Active Accounts"
-          value={data?.active_terminals}
-          icon={CreditCard}
           loading={isPending}
         />
         <StatCard

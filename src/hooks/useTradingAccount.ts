@@ -23,6 +23,7 @@ export function useTradingAccount() {
 
   useEffect(() => {
     if (accounts.length === 0) return
+    if (activeAccountId === 'all') return
     // Auto-select first account if persisted id no longer exists in the list
     const exists = accounts.some((a) => a.id === activeAccountId)
     if (!exists) {
@@ -31,12 +32,16 @@ export function useTradingAccount() {
   }, [accounts, activeAccountId, setActiveAccountId])
 
   const activeAccount =
-    accounts.find((a) => a.id === activeAccountId) ?? accounts[0] ?? null
+    activeAccountId === 'all'
+      ? null
+      : accounts.find((a) => a.id === activeAccountId) ?? accounts[0] ?? null
 
   return {
     accounts,
     activeAccount,
-    activeAccountId: activeAccount?.id ?? null,
+    activeAccountId: activeAccountId === 'all' ? null : activeAccount?.id ?? null,
+    selectedScope: activeAccountId === 'all' ? 'all' : 'account',
+    isAllAccounts: activeAccountId === 'all',
     setActiveAccountId,
     hasAccounts: accounts.length > 0,
     isLoading,
