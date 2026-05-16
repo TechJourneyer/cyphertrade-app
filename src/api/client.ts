@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { env } from '@/lib/env'
+import type { PaginationMeta } from '@/types/api'
 
 export const apiClient = axios.create({
   baseURL:        env.apiUrl,
@@ -58,8 +59,32 @@ export async function apiGet<T>(path: string, params?: Record<string, unknown>):
  * res.data.data (the array), discarding meta. This helper reads both fields.
  */
 export async function apiList<T>(path: string, params?: Record<string, unknown>): Promise<{ data: T[]; meta: import('@/types/api').PaginationMeta }> {
-  const res = await apiClient.get<{ data: T[]; meta: import('@/types/api').PaginationMeta }>(path, { params })
-  return { data: res.data.data, meta: res.data.meta }
+  const res = await apiClient.get<{ data: T[] | { data?: T[]; meta?: PaginationMeta }; meta?: PaginationMeta }>(path, { params })
+  const payload = res.data.data
+
+  if (Array.isArray(payload)) {
+    return {
+      data: payload,
+      meta: res.data.meta ?? { current_page: 1, last_page: 1, per_page: payload.length, total: payload.length },
+    }
+  }
+
+  if (payload && Array.isArray(payload.data)) {
+    return {
+      data: payload.data,
+      meta: res.data.meta ?? payload.meta ?? {
+        current_page: 1,
+        last_page: 1,
+        per_page: payload.data.length,
+        total: payload.data.length,
+      },
+    }
+  }
+
+  return {
+    data: [],
+    meta: res.data.meta ?? { current_page: 1, last_page: 1, per_page: 0, total: 0 },
+  }
 }
 
 export async function apiPost<T>(path: string, body?: unknown): Promise<T> {

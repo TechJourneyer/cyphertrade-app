@@ -67,12 +67,26 @@ export function Topbar({ className }: TopbarProps) {
                 <span
                   className={cn(
                     'h-2 w-2 rounded-full shrink-0',
-                    activeAccount?.status === 'active' ? 'bg-success' : 'bg-muted-foreground',
+                    isAllAccounts
+                      ? 'bg-primary'
+                      : activeAccount?.is_terminal_on
+                      ? 'bg-success'
+                      : 'bg-warning',
                   )}
                 />
-                <span className="max-w-[160px] truncate text-xs font-medium text-foreground">
+                <div className="flex flex-col items-start leading-tight">
+                  <span className="max-w-[160px] truncate text-xs font-medium text-foreground">
                   {isAllAccounts ? 'All Accounts' : activeAccount?.account_name ?? 'Select Account'}
-                </span>
+                  </span>
+                  {!isAllAccounts && activeAccount && (
+                    <span className={cn(
+                      'text-[10px] uppercase tracking-wide',
+                      activeAccount.is_terminal_on ? 'text-success' : 'text-warning',
+                    )}>
+                      {activeAccount.is_terminal_on ? 'Terminal On' : 'Terminal Off'}
+                    </span>
+                  )}
+                </div>
                 <ChevronsUpDown className="h-3 w-3 text-muted-foreground shrink-0" />
               </button>
             </DropdownMenuTrigger>
@@ -98,17 +112,22 @@ export function Topbar({ className }: TopbarProps) {
                   key={acc.id}
                   onClick={() => setActiveAccountId(acc.id)}
                   className={cn(
-                    'flex items-center gap-2',
+                    'flex items-start gap-2',
                     !isAllAccounts && acc.id === activeAccount?.id && 'bg-secondary',
                   )}
                 >
                   <span
                     className={cn(
                       'h-1.5 w-1.5 rounded-full shrink-0',
-                      acc.status === 'active' ? 'bg-success' : 'bg-muted-foreground',
+                      acc.is_terminal_on ? 'bg-success' : 'bg-warning',
                     )}
                   />
-                  <span className="flex-1 truncate">{acc.account_name}</span>
+                  <div className="flex flex-1 flex-col leading-tight">
+                    <span className="truncate">{acc.account_name}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                      {acc.app_name} • {acc.is_terminal_on ? 'Terminal On' : 'Terminal Off'}
+                    </span>
+                  </div>
                   {!isAllAccounts && acc.id === activeAccount?.id && (
                     <Badge variant="outline" className="h-3.5 px-1 py-0 text-[10px]">
                       active

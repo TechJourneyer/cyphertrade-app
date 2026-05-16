@@ -9,24 +9,22 @@ import { useAuth } from '@/hooks/useAuth';
 import * as instrumentsApi from '@/api/instruments';
 
 const SCANNERS = [
-  { label: 'All', value: 'ALL' },
+  { label: 'All Screeners', value: 'ALL' },
+  { label: 'Top Gainers', value: 'TOP_GAINERS' },
+  { label: 'Top Losers', value: 'TOP_LOOSERS' },
+  { label: 'Volume Gainers', value: 'VOLUME_GAINERS' },
+  { label: 'Volume Gap Up', value: 'VOLUME_GAP_UP' },
   { label: 'Price Gap Up', value: 'PRICE_GAP_UP' },
   { label: 'Price Gap Down', value: 'PRICE_GAP_DOWN' },
+  { label: 'Most Active by Volume', value: 'MOST_ACTIVE_BY_VOLUME' },
+  { label: 'Most Active by Value', value: 'MOST_ACTIVE_BY_VALUE' },
   { label: '44 SMA', value: '44sma' },
 ];
-
-function getTodayDateInput(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
 
 export default function ScreenerPage() {
   const { hasHydrated } = useAuth();
   const [activeTab, setActiveTab] = useState('ALL');
-  const [scanDate, setScanDate] = useState(getTodayDateInput());
+  const [scanDate, setScanDate] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
@@ -35,7 +33,7 @@ export default function ScreenerPage() {
     queryFn: () =>
       instrumentsApi.screener.results(page, 30, {
         scanner: activeTab !== 'ALL' ? activeTab : '',
-        scan_date: scanDate,
+        scan_date: scanDate || undefined,
         search,
       }),
     enabled: hasHydrated,
@@ -47,7 +45,7 @@ export default function ScreenerPage() {
 
   return (
     <PageShell title="Screener" description="Find stocks matching your scan criteria">
-      <div className="mb-4 grid gap-3 md:grid-cols-3">
+      <div className="mb-4 grid gap-3 md:grid-cols-3 lg:grid-cols-4">
         <Input
           type="search"
           placeholder="Search by symbol or name..."
@@ -57,30 +55,43 @@ export default function ScreenerPage() {
             setSearch(e.target.value);
           }}
         />
-        <Input
-          type="date"
-          value={scanDate}
-          onChange={(e) => {
-            setPage(1);
-            setScanDate(e.target.value);
-          }}
-          aria-label="Scan date"
-        />
-      </div>
-
-      <div className="mb-6 flex flex-wrap gap-2">
-        {SCANNERS.map((tab) => (
+        <div className="flex items-center gap-2">
+          <Input
+            type="date"
+            value={scanDate}
+            onChange={(e) => {
+              setPage(1);
+              setScanDate(e.target.value);
+            }}
+            aria-label="Scan date"
+          />
           <Button
-            key={tab.value}
-            variant={activeTab === tab.value ? 'default' : 'outline'}
+            type="button"
+            variant="outline"
             onClick={() => {
               setPage(1);
-              setActiveTab(tab.value);
+              setScanDate('');
             }}
+            disabled={!scanDate}
           >
-            {tab.label}
+            Clear
           </Button>
-        ))}
+        </div>
+        <select
+          value={activeTab}
+          onChange={(e) => {
+            setPage(1);
+            setActiveTab(e.target.value);
+          }}
+          className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          aria-label="Screener type"
+        >
+          {SCANNERS.map((scanner) => (
+            <option key={scanner.value} value={scanner.value}>
+              {scanner.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">

@@ -9,6 +9,21 @@ import { useAuth } from '@/hooks/useAuth';
 import * as instrumentsApi from '@/api/instruments';
 import type { Instrument } from '@/types/api';
 
+const INDEX_OPTIONS = [
+  'NIFTY 50',
+  'NIFTY 100',
+  'NIFTY 200',
+  'NIFTY BANK',
+  'NIFTY AUTO',
+  'NIFTY MIDCAP 50',
+];
+
+const STATUS_OPTIONS = [
+  { label: 'Active', value: '1' },
+  { label: 'Inactive', value: '0' },
+  { label: 'Sync in Progress', value: '2' },
+];
+
 function formatDateTime(value?: string | null): string {
   if (!value) return '—';
   const dt = new Date(value);
@@ -33,20 +48,15 @@ export default function InstrumentsPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['instruments', page, search, statusFilter, sortBy, sortOrder],
+    queryKey: ['instruments', page, search, indexFilter, statusFilter, sortBy, sortOrder],
     queryFn: () =>
       instrumentsApi.list(page, 20, {
         search,
+        index_name: indexFilter !== 'ALL' ? indexFilter : undefined,
         status: statusFilter !== 'ALL' ? statusFilter : undefined,
       }),
     enabled: hasHydrated,
   });
-
-  const rows = (data?.data ?? []).filter((row) =>
-    indexFilter === 'ALL' ? true : row.exchange === indexFilter,
-  );
-
-  const exchangeOptions = Array.from(new Set((data?.data ?? []).map((row) => row.exchange))).sort();
 
   const columns: DataTableColumn<Instrument>[] = [
     { key: 'trading_symbol', label: 'Symbol', sortable: true },
@@ -137,9 +147,9 @@ export default function InstrumentsPage() {
           className="h-10 rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="ALL">All Indexes</option>
-          {exchangeOptions.map((exchange) => (
-            <option key={exchange} value={exchange}>
-              {exchange}
+          {INDEX_OPTIONS.map((indexName) => (
+            <option key={indexName} value={indexName}>
+              {indexName}
             </option>
           ))}
         </select>
@@ -153,16 +163,19 @@ export default function InstrumentsPage() {
           className="h-10 rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="ALL">All Status</option>
-          <option value="1">Active</option>
-          <option value="2">Inactive</option>
+          {STATUS_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </div>
 
       <DataTable
         columns={columns}
-        data={rows}
+        data={data?.data ?? []}
         isLoading={isLoading}
-        isEmpty={!rows.length}
+        isEmpty={!data?.data?.length}
         sortBy={sortBy}
         sortOrder={sortOrder}
         onSort={(key) => setSortBy(key)}

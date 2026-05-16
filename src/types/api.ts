@@ -172,6 +172,7 @@ export interface Instrument {
   lot_size:        number
   tick_size:       number
   status:          number
+  indexes?:        string[]
   market_data?: {
     open:               number
     high:               number
@@ -182,6 +183,8 @@ export interface Instrument {
     net_change:         number
     equity_margin_rate: number
     last_trade_time:    string | null
+    tick_at?:           string | null
+    updated_at?:        string | null
   } | null
   updated_at: string
 }
