@@ -7,22 +7,35 @@ export interface BacktestPayload {
   trading_account_id?: number
 }
 
+export interface BacktestOrder {
+  id:                number
+  instrument:        string
+  entry_time:        string
+  order_type:        'buy' | 'sell'
+  order_price:       number
+  quantity:          number
+  entry_total_price: number
+  exit_time:         string
+  exit_price:        number
+  exit_total_price:  number
+  fees:              number
+  pnl:               number
+  'pnl_%':           number
+  pnl_till_now:      number
+  trigger:           'targetReached' | 'stopLossReached' | 'exitTimeEnds'
+}
+
 export interface BacktestResult {
-  start_date?: string
-  end_date?: string
-  total_trades: number
-  total_pnl: number
-  total_profit_trades: number
-  total_loss_trades: number
+  start_date:         string
+  end_date:           string
+  candles_from_date?: string
+  total_trades:       number
+  total_pnl:          number
+  total_profit_trades:number
+  total_loss_trades:  number
   profit_trade_percent: number
-  average_pnl: number
-  trades: Array<{
-    entry_time: string
-    order_price: number
-    exit_time: string
-    exit_price: number
-    pnl: number
-  }>
+  average_pnl:        number
+  orders:             BacktestOrder[]
 }
 
 /**
@@ -47,8 +60,11 @@ export async function signals(id: number): Promise<unknown> {
 }
 
 /**
- * Run backtest
+ * Run backtest — uses a longer timeout (5 min) as the strategy iterates
+ * many instruments and makes broker API calls.
  */
 export async function runBacktest(payload: BacktestPayload): Promise<{ report: BacktestResult | null }> {
-  return apiPost<{ report: BacktestResult | null }>('/backtest', payload)
+  const { apiClient } = await import('./client')
+  const res = await apiClient.post<{ data: { report: BacktestResult | null } }>('/backtest', payload, { timeout: 300_000 })
+  return res.data.data
 }

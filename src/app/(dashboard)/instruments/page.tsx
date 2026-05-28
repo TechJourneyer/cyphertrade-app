@@ -72,24 +72,10 @@ export default function InstrumentsPage() {
     },
     {
       key: 'market_data',
-      label: 'Open',
+      label: 'Margin Rate',
       sortable: false,
       render: (_: unknown, row: any) =>
-        row.market_data ? `₹${Number(row.market_data.open).toFixed(2)}` : '—',
-    },
-    {
-      key: 'market_data',
-      label: 'High',
-      sortable: false,
-      render: (_: unknown, row: any) =>
-        row.market_data ? `₹${Number(row.market_data.high).toFixed(2)}` : '—',
-    },
-    {
-      key: 'market_data',
-      label: 'Low',
-      sortable: false,
-      render: (_: unknown, row: any) =>
-        row.market_data ? `₹${Number(row.market_data.low).toFixed(2)}` : '—',
+        row.market_data ? `₹${Number(row.market_data.margin_rate).toFixed(2)}` : '—',
     },
     {
       key: 'market_data',
@@ -100,7 +86,7 @@ export default function InstrumentsPage() {
     },
     {
       key: 'market_data',
-      label: 'Last Sync On',
+      label: 'Last Sync On1',
       sortable: false,
       render: (_: unknown, row: any) =>
         formatDateTime(row.market_data?.updated_at ?? row.market_data?.tick_at),

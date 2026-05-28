@@ -1,54 +1,55 @@
 # Cyphertrade App - Production Dockerfile
-# Multi-stage build: Node.js build → Nginx serve
+# Multi-stage build: Next.js build -> Node.js runtime
 
-# ===========================================
-# Stage 1: Build React Application
-# ===========================================
 FROM node:20-alpine AS builder
 
 LABEL maintainer="Cyphertrade Team"
-LABEL description="Cyphertrade React SPA - Build Stage"
+LABEL description="Cyphertrade Next.js App - Build Stage"
 
 WORKDIR /app
 
 # Install dependencies first (better caching)
 COPY package*.json ./
-RUN npm ci --only=production=false
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Build arguments for environment
-ARG VITE_API_URL=http://localhost:8000/api/v1
-ARG VITE_WS_URL=ws://localhost:8082
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
 # Set environment variables for build
-ENV VITE_API_URL=$VITE_API_URL
-ENV VITE_WS_URL=$VITE_WS_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
 RUN npm run build
 
-# ===========================================
-# Stage 2: Serve with Nginx
-# ===========================================
-FROM nginx:alpine AS production
+FROM node:20-alpine AS production
 
 LABEL maintainer="Cyphertrade Team"
-LABEL description="Cyphertrade React SPA - Production"
+LABEL description="Cyphertrade Next.js App - Production"
 
-# Copy nginx configuration
-COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+WORKDIR /app
 
-# Copy built assets from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NEXT_TELEMETRY_DISABLED=1
+
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
+
+# Expose port
+EXPOSE 3000
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
 
-# Expose port
-EXPOSE 80
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start Next.js
+CMD ["npm", "run", "start"]

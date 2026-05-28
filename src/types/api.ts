@@ -216,14 +216,14 @@ export interface LiveMarketTick {
 // ─── Strategies ──────────────────────────────────────────────────────────────
 
 export interface Strategy {
-  id:          number
-  name:        string
-  code:        string
-  description: string | null
-  is_active:   boolean
-  params:      Record<string, unknown>
-  created_at:  string
-  updated_at:  string
+  id:                number
+  code:              string
+  name:              string
+  description:       string | null
+  rr_ratio:          string | null
+  stop_loss_percent: number | null
+  timeframe:         string | null
+  status:            string | null
 }
 
 // ─── Users ────────────────────────────────────────────────────────────────────
