@@ -4,7 +4,6 @@ import type { Strategy } from '@/types/api'
 export interface BacktestPayload {
   strategy: string
   investment_amount: number
-  trading_account_id?: number
 }
 
 export interface BacktestOrder {

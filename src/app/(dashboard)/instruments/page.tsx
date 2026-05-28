@@ -75,7 +75,7 @@ export default function InstrumentsPage() {
       label: 'Margin Rate',
       sortable: false,
       render: (_: unknown, row: any) =>
-        row.market_data ? `₹${Number(row.market_data.margin_rate).toFixed(2)}` : '—',
+        row.market_data ? `₹${Number(row.market_data.equity_margin_rate).toFixed(2)}` : '—',
     },
     {
       key: 'market_data',
