@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import * as tradingAccountsApi from '@/api/trading-accounts'
 
@@ -9,6 +10,7 @@ export default function TradingAccountCallbackPage() {
   const params = useParams<{ id: string }>()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const queryClient = useQueryClient()
 
   const [statusText, setStatusText] = useState('Processing broker callback...')
 
@@ -28,6 +30,8 @@ export default function TradingAccountCallbackPage() {
 
     const finish = (status: 'success' | 'error', message: string) => {
       const qp = new URLSearchParams({ oauth: status, oauth_message: message })
+      queryClient.invalidateQueries({ queryKey: ['trading-accounts', 'all'] })
+      queryClient.invalidateQueries({ queryKey: ['trading-accounts', 'detail', accountId] })
       router.replace(`/trading-accounts/${params.id}/edit?${qp.toString()}`)
     }
 
@@ -58,6 +62,7 @@ export default function TradingAccountCallbackPage() {
         if (!isCancelled) setStatusText('Saving access token for your account...')
         const response = await tradingAccountsApi.saveAccessToken(accountId, code)
 
+        queryClient.setQueryData(['trading-accounts', 'detail', accountId], response)
         finish('success', (response as { message?: string })?.message || 'Terminal connected successfully.')
       } catch (error) {
         // Do NOT check isCancelled here — always navigate away on failure too.

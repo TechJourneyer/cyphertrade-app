@@ -31,7 +31,8 @@ function TerminalSection({ account }: { account?: TradingAccount | undefined }) 
       return tradingAccountsApi.disconnect(account!.id)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trading-accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['trading-accounts', 'all'] })
+      queryClient.invalidateQueries({ queryKey: ['trading-accounts', 'detail', account!.id] })
     },
   })
 
@@ -49,7 +50,7 @@ function TerminalSection({ account }: { account?: TradingAccount | undefined }) 
     try {
       const loginUrl = await tradingAccountsApi.getRedirectUrl(account!.id)
       if (loginUrl) {
-        window.open(loginUrl, '_blank', 'noopener,noreferrer')
+        window.location.assign(loginUrl)
       }
     } finally {
       setIsConnecting(false)
@@ -161,7 +162,8 @@ export default function EditTradingAccountPage() {
     mutationFn: (payload: tradingAccountsApi.UpdateTradingAccountPayload) =>
       tradingAccountsApi.update(accountId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['trading-accounts'] })
+      queryClient.invalidateQueries({ queryKey: ['trading-accounts', 'all'] })
+      queryClient.invalidateQueries({ queryKey: ['trading-accounts', 'detail', accountId] })
       const params = new URLSearchParams({
         save: 'success',
         save_message: 'Account details updated successfully.',

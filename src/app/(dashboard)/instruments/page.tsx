@@ -64,35 +64,35 @@ export default function InstrumentsPage() {
     { key: 'instrument_key', label: 'Instrument Key', sortable: true },
     { key: 'exchange', label: 'Exchange', sortable: false },
     {
-      key: 'market_data',
+      key: 'market_data_ltp',
       label: 'LTP',
       sortable: false,
       render: (_: unknown, row: any) =>
         row.market_data ? `₹${Number(row.market_data.last_price).toFixed(2)}` : '—',
     },
     {
-      key: 'market_data',
+      key: 'market_data_margin',
       label: 'Margin Rate',
       sortable: false,
       render: (_: unknown, row: any) =>
         row.market_data ? `₹${Number(row.market_data.equity_margin_rate).toFixed(2)}` : '—',
     },
     {
-      key: 'market_data',
+      key: 'market_data_volume',
       label: 'Volume',
       sortable: false,
       render: (_: unknown, row: any) =>
         row.market_data?.volume !== undefined ? Number(row.market_data.volume).toLocaleString('en-IN') : '—',
     },
     {
-      key: 'market_data',
+      key: 'market_data_last_sync',
       label: 'Last Sync On1',
       sortable: false,
       render: (_: unknown, row: any) =>
         formatDateTime(row.market_data?.updated_at ?? row.market_data?.tick_at),
     },
     {
-      key: 'market_data',
+      key: 'market_data_last_traded',
       label: 'Last Traded On',
       sortable: false,
       render: (_: unknown, row: any) => formatDateTime(row.market_data?.last_trade_time),
