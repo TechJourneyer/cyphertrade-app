@@ -19,6 +19,7 @@ import { ErrorState } from '@/components/data-display/ErrorState'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   const { activeAccount, activeAccountId, hasAccounts, isAllAccounts } = useTradingAccount()
@@ -95,6 +96,24 @@ export default function DashboardPage() {
           </div>
         }
       >
+
+      {data?.oauth_required && (
+        <div
+          role="alert"
+          className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm"
+        >
+          <p className="font-medium text-warning">Broker terminal is off</p>
+          <p className="mt-1 text-muted-foreground">
+            Connect Upstox before 09:15 IST. Order jobs will skip until OAuth is complete.
+          </p>
+          <Link
+            href={activeAccount ? `/trading-accounts/${activeAccount.id}/edit` : '/trading-accounts'}
+            className="mt-2 inline-flex text-xs font-medium text-warning underline-offset-2 hover:underline"
+          >
+            Connect terminal
+          </Link>
+        </div>
+      )}
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">

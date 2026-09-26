@@ -41,6 +41,7 @@ export interface LoginResponse {
 export interface DashboardData {
   active_bots:        number
   active_terminals:   number
+  oauth_required:     boolean
   today_trades:       number
   today_pnl:          number
   filled_orders:      number

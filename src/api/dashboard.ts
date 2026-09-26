@@ -21,6 +21,7 @@ interface RawDashboardResponse {
   }
   active_bots?: number
   active_terminals?: number
+  oauth_required?: boolean
   today_trades?: number
   today_pnl?: number
   filled_orders?: number
@@ -37,6 +38,7 @@ export async function getDashboard(accountId?: number | null): Promise<Dashboard
   return {
     active_bots: raw.active_bots ?? raw.bots?.active ?? 0,
     active_terminals: raw.active_terminals ?? raw.trading_accounts?.active_terminals ?? 0,
+    oauth_required: Boolean(raw.oauth_required),
     today_trades: raw.today_trades ?? raw.today_summary?.total_trades ?? 0,
     today_pnl: raw.today_pnl ?? raw.today_summary?.total_profit ?? 0,
     filled_orders: raw.filled_orders ?? raw.today_summary?.filled_orders ?? 0,
