@@ -1,6 +1,6 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   Bot,
   TrendingUp,
@@ -8,21 +8,29 @@ import {
   Activity,
   RefreshCw,
   Clock,
+  Pause,
+  Play,
 } from 'lucide-react'
 import { getDashboard } from '@/api/dashboard'
+import * as botsApi from '@/api/bots'
 import { useLiveMarketPolling } from '@/hooks/useLiveMarketPolling'
 import { useTradingAccount } from '@/hooks/useTradingAccount'
+import { useToast } from '@/hooks/useToast'
 import { PageShell } from '@/components/layout/PageShell'
 import { StatCard } from '@/components/data-display/StatCard'
 import { StaleIndicator } from '@/components/data-display/StaleIndicator'
 import { ErrorState } from '@/components/data-display/ErrorState'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import type { Bot as BotType } from '@/types/api'
 
 export default function DashboardPage() {
   const { activeAccount, activeAccountId, hasAccounts, isAllAccounts } = useTradingAccount()
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
 
   const {
     data,
@@ -34,6 +42,36 @@ export default function DashboardPage() {
     queryFn: () => getDashboard(activeAccountId),
     enabled: hasAccounts || isAllAccounts,
     staleTime: 30_000,
+  })
+
+  const { data: botsResponse } = useQuery({
+    queryKey: ['bots', 'kill-switch', activeAccountId],
+    queryFn: () => botsApi.list(1, 50, { account_id: activeAccountId ?? undefined }),
+    enabled: hasAccounts || isAllAccounts,
+    staleTime: 15_000,
+  })
+
+  const bots: BotType[] = botsResponse?.data ?? []
+
+  const toggleBot = useMutation({
+    mutationFn: (bot: BotType) => (bot.status === 1 ? botsApi.pause(bot.id) : botsApi.resume(bot.id)),
+    onSuccess: (_data, bot) => {
+      queryClient.invalidateQueries({ queryKey: ['bots'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      toast({
+        title: bot.status === 1 ? 'Bot paused' : 'Bot resumed',
+        description: bot.status === 1
+          ? 'New entries and initiate trades are stopped.'
+          : 'Bot is active again.',
+      })
+    },
+    onError: (err: Error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Kill switch failed',
+        description: err.message || 'Could not update bot status.',
+      })
+    },
   })
 
   const { ticks, isStale, isPending: liveMarketPending } = useLiveMarketPolling()
@@ -112,6 +150,42 @@ export default function DashboardPage() {
           >
             Connect terminal
           </Link>
+        </div>
+      )}
+
+      {bots.length > 0 && (
+        <div className="rounded-lg border border-border bg-surface-1 px-4 py-3">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Kill switch
+            </p>
+            <Link href="/bots" className="text-xs text-muted-foreground hover:text-foreground">
+              Manage bots
+            </Link>
+          </div>
+          <div className="flex flex-col gap-2">
+            {bots.map((bot) => {
+              const isActive = bot.status === 1
+              return (
+                <div key={bot.id} className="flex items-center justify-between gap-3 rounded-md bg-surface-2 px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{bot.name}</p>
+                    <StatusBadge status={isActive ? 'active' : 'paused'} />
+                  </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={isActive ? 'destructive' : 'default'}
+                    loading={toggleBot.isPending && toggleBot.variables?.id === bot.id}
+                    onClick={() => toggleBot.mutate(bot)}
+                  >
+                    {isActive ? <Pause size={13} /> : <Play size={13} />}
+                    {isActive ? 'Pause' : 'Resume'}
+                  </Button>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 

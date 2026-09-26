@@ -1,9 +1,12 @@
 import Link from 'next/link'
-import { Pencil, Bot, Wallet, TrendingUp } from 'lucide-react'
+import { Pencil, Bot, Wallet, TrendingUp, Pause, Play } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useToast } from '@/hooks/useToast'
+import * as botsApi from '@/api/bots'
 import type { Bot as BotType } from '@/types/api'
 
 interface BotCardProps {
@@ -11,7 +14,31 @@ interface BotCardProps {
 }
 
 export function BotCard({ bot }: BotCardProps) {
-  const statusLabel = bot.status === 1 ? 'active' : 'inactive'
+  const isActive = bot.status === 1
+  const statusLabel = isActive ? 'active' : 'paused'
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  const toggle = useMutation({
+    mutationFn: () => (isActive ? botsApi.pause(bot.id) : botsApi.resume(bot.id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bots'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      toast({
+        title: isActive ? 'Bot paused' : 'Bot resumed',
+        description: isActive
+          ? 'New entries and initiate trades are stopped. Open positions still monitor until square-off.'
+          : 'Initiate and entry crons will run again for this bot.',
+      })
+    },
+    onError: (err: Error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Kill switch failed',
+        description: err.message || 'Could not update bot status.',
+      })
+    },
+  })
 
   return (
     <Card className="group flex flex-col transition-all duration-200 hover:border-primary/40 hover:shadow-md hover:shadow-primary/5">
@@ -30,7 +57,6 @@ export function BotCard({ bot }: BotCardProps) {
       </CardHeader>
 
       <CardContent className="flex flex-col gap-3 pb-4">
-        {/* Strategy */}
         <div className="flex items-center gap-2 text-xs">
           <TrendingUp className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <span className="text-muted-foreground">Strategy</span>
@@ -39,7 +65,6 @@ export function BotCard({ bot }: BotCardProps) {
           </span>
         </div>
 
-        {/* Linked Account */}
         <div className="flex items-center gap-2 text-xs">
           <Wallet className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
           <span className="text-muted-foreground">Account</span>
@@ -50,7 +75,6 @@ export function BotCard({ bot }: BotCardProps) {
 
         <div className="h-px bg-border" />
 
-        {/* Limits row */}
         <div className="grid grid-cols-2 gap-3">
           <div className="rounded-md bg-muted/30 px-3 py-2">
             <p className="text-[10px] text-muted-foreground leading-none mb-1">Per Trade</p>
@@ -67,15 +91,26 @@ export function BotCard({ bot }: BotCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="mt-auto pt-0">
-        <Link href={`/bots/${bot.id}/edit`} className="w-full">
+      <CardFooter className="mt-auto pt-0 flex gap-2">
+        <Button
+          type="button"
+          variant={isActive ? 'destructive' : 'default'}
+          size="sm"
+          className="flex-1 gap-1.5 text-xs"
+          loading={toggle.isPending}
+          onClick={() => toggle.mutate()}
+        >
+          {isActive ? <Pause size={13} /> : <Play size={13} />}
+          {isActive ? 'Pause' : 'Resume'}
+        </Button>
+        <Link href={`/bots/${bot.id}/edit`} className="flex-1">
           <Button
             variant="outline"
             size="sm"
             className="w-full gap-1.5 text-xs transition-colors group-hover:border-primary/50 group-hover:text-primary"
           >
             <Pencil size={13} />
-            Edit Bot
+            Edit
           </Button>
         </Link>
       </CardFooter>

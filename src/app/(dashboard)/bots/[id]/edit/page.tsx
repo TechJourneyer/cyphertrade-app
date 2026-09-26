@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { PageShell } from '@/components/layout/PageShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useTradingAccount } from '@/hooks/useTradingAccount';
+import { useToast } from '@/hooks/useToast';
 import * as botsApi from '@/api/bots';
 import * as strategiesApi from '@/api/strategies';
-import type { Strategy } from '@/types/api';
+import type { Bot as BotType, Strategy } from '@/types/api';
 
 const SELECT_CLASS =
   'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50';
@@ -115,6 +116,8 @@ export default function EditBotPage() {
         { label: bot.name },
       ]}
     >
+
+      <KillSwitchBar bot={bot} />
 
       <div className="max-w-lg rounded-lg border border-border bg-card p-6">
         <form onSubmit={handleSubmit} className="space-y-5">
@@ -234,4 +237,52 @@ export default function EditBotPage() {
       </div>
     </PageShell>
   );
+}
+
+function KillSwitchBar({ bot }: { bot: BotType }) {
+  const isActive = bot.status === 1
+  const queryClient = useQueryClient()
+  const { toast } = useToast()
+
+  const toggle = useMutation({
+    mutationFn: () => (isActive ? botsApi.pause(bot.id) : botsApi.resume(bot.id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bots'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      toast({
+        title: isActive ? 'Bot paused' : 'Bot resumed',
+        description: isActive
+          ? 'New entries and initiate trades are stopped.'
+          : 'Bot is active again.',
+      })
+    },
+    onError: (err: Error) => {
+      toast({
+        variant: 'destructive',
+        title: 'Kill switch failed',
+        description: err.message || 'Could not update bot status.',
+      })
+    },
+  })
+
+  return (
+    <div className="mb-4 max-w-lg rounded-lg border border-warning/40 bg-warning/10 px-4 py-3">
+      <p className="text-sm font-medium text-foreground">
+        {isActive ? 'Bot is live' : 'Bot is paused'}
+      </p>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Pause stops initiate and new entry orders immediately. Open positions still monitor and square off.
+      </p>
+      <Button
+        type="button"
+        size="sm"
+        className="mt-2"
+        variant={isActive ? 'destructive' : 'default'}
+        loading={toggle.isPending}
+        onClick={() => toggle.mutate()}
+      >
+        {isActive ? 'Pause bot' : 'Resume bot'}
+      </Button>
+    </div>
+  )
 }

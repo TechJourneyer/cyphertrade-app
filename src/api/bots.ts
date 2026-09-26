@@ -47,6 +47,20 @@ export async function update(id: number, payload: UpdateBotPayload): Promise<Bot
 }
 
 /**
+ * Pause bot — stops initiate + new entry orders immediately.
+ */
+export async function pause(id: number): Promise<Bot> {
+  return apiPost<Bot>(`/bots/${id}/pause`)
+}
+
+/**
+ * Resume a paused bot.
+ */
+export async function resume(id: number): Promise<Bot> {
+  return apiPost<Bot>(`/bots/${id}/resume`)
+}
+
+/**
  * Delete bot
  */
 export async function destroy(id: number): Promise<void> {
