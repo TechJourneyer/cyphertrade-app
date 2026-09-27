@@ -255,3 +255,27 @@ export interface Permission {
   guard_name: string
   group:      string
 }
+
+// ─── Corporate actions ────────────────────────────────────────────────────────
+
+export type CorporateActionType = 'dividend' | 'bonus' | 'split' | 'rights' | 'other'
+
+export interface CorporateAction {
+  id: number
+  isin: string
+  trading_symbol: string | null
+  instrument_name: string | null
+  type: CorporateActionType
+  type_label: string
+  is_structural: boolean
+  ex_date: string
+  amount: number | null
+  ratio: string | null
+  candles_invalidated_at: string | null
+  instrument: {
+    id: number
+    name: string
+    trading_symbol: string
+    instrument_key: string
+  } | null
+}

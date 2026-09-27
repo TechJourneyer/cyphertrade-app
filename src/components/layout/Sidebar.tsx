@@ -9,6 +9,7 @@ import {
   TrendingUp,
   BookOpen,
   ScanLine,
+  Split,
   Zap,
   Users,
   ShieldCheck,
@@ -51,6 +52,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Market',
     items: [
       { label: 'Instruments', href: '/instruments', icon: BookOpen },
+      { label: 'Corporate actions', href: '/corporate-actions', icon: Split },
       { label: 'Screener',    href: '/screener',    icon: ScanLine },
     ],
   },
