@@ -28,7 +28,7 @@ Browser storage holds the Sanctum token. Every API request sends `Authorization:
 
 | Route | Purpose |
 |---|---|
-| `/dashboard` | KPIs, market status, OAuth banner |
+| `/dashboard` | KPIs, market status, OAuth banner. “Live Market” polls the API every 3s; those prices come from the API’s once-a-minute REST cron and are display only. Entry uses a separate REST quote at place time. |
 | `/trading-accounts` | Broker accounts + OAuth |
 | `/bots` | Strategy bots and capital limits |
 | `/screener` | Scan output |
