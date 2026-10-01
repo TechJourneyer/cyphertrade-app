@@ -7,6 +7,7 @@ import { PageShell } from '@/components/layout/PageShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useTradingAccount } from '@/hooks/useTradingAccount';
 import * as tradesApi from '@/api/trades';
+import { formatCurrency } from '@/lib/utils'
 import type { Trade } from '@/types/api';
 
 export default function TradesPage() {
@@ -37,7 +38,14 @@ export default function TradesPage() {
       if (value === null || value === undefined || isNaN(n)) return '—';
       return <span className={`font-semibold font-mono ${n >= 0 ? 'text-gain' : 'text-loss'}`}>₹{n.toFixed(2)}</span>;
     } },
-    { key: 'status', label: 'Status', sortable: true },
+    { key: 'status', label: 'Status', sortable: true, render: (_: unknown, row: Trade) => (
+      <div className="flex flex-col gap-0.5">
+        <span>{row.status_label ?? row.status ?? '—'}</span>
+        {row.attention && (
+          <span className="text-xs font-medium text-warning">{row.attention}</span>
+        )}
+      </div>
+    ) },
   ];
 
   if (!hasHydrated) {
@@ -53,6 +61,22 @@ export default function TradesPage() {
           : `View trading history for ${activeAccount?.account_name ?? 'selected account'}`
       }
     >
+      {(data?.meta?.today_trades !== undefined || (data?.meta?.attention_count ?? 0) > 0) && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface-1 px-4 py-3 text-sm">
+          <span>
+            Today P&amp;L{' '}
+            <span className={`font-mono font-semibold ${(data?.meta?.today_pnl ?? 0) >= 0 ? 'text-gain' : 'text-loss'}`}>
+              {formatCurrency(data?.meta?.today_pnl ?? 0)}
+            </span>
+            <span className="text-muted-foreground"> · {data?.meta?.today_trades ?? 0} trades</span>
+          </span>
+          {(data?.meta?.attention_count ?? 0) > 0 && (
+            <span className="rounded-md border border-warning/40 bg-warning/10 px-2 py-1 text-xs font-medium text-warning">
+              {data?.meta?.attention_count} need attention
+            </span>
+          )}
+        </div>
+      )}
       <DataTable
         columns={columns}
         data={data?.data || []}
@@ -61,6 +85,7 @@ export default function TradesPage() {
         sortBy={sortBy}
         sortOrder={sortOrder}
         onSort={(key) => setSortBy(key)}
+        rowClassName={(row) => (row.attention ? 'bg-warning/10' : undefined)}
         pagination={
           data?.meta
             ? {

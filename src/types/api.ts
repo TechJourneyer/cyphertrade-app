@@ -151,6 +151,8 @@ export interface Trade {
   bot_id:            number | null
   account_id:        number | null
   instrument_id:     number | null
+  status_label:      string | null
+  attention:         string | null
   bot: {
     id:   number
     name: string

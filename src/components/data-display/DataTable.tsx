@@ -27,6 +27,7 @@ export interface DataTableProps<T extends object> {
   onSort?: (key: string) => void
   skeletonRows?: number
   pagination?: DataTablePaginationProps
+  rowClassName?: (row: T) => string | undefined
 }
 
 export function DataTable<T extends object>({
@@ -40,6 +41,7 @@ export function DataTable<T extends object>({
   onSort,
   skeletonRows = 10,
   pagination,
+  rowClassName,
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
@@ -111,7 +113,10 @@ export function DataTable<T extends object>({
         </thead>
         <tbody>
           {data.map((row, idx) => (
-            <tr key={idx} className="border-b border-border hover:bg-secondary/50 transition-colors">
+            <tr
+              key={idx}
+              className={`border-b border-border hover:bg-secondary/50 transition-colors ${rowClassName?.(row) ?? ''}`}
+            >
               {columns.map((col) => (
                 <td key={String(col.key)} className={`px-4 py-3 text-foreground ${col.className}`}>
                   {col.render ? col.render((row as Record<string | symbol, unknown>)[col.key as string | symbol], row) : String((row as Record<string | symbol, unknown>)[col.key as string | symbol] ?? '—')}
