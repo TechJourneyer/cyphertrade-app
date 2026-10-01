@@ -189,6 +189,36 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {data?.square_off && (
+        <div
+          role="status"
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            data.square_off.status === 'failed'
+              ? 'border-destructive/40 bg-destructive/10'
+              : 'border-border bg-surface-1'
+          }`}
+        >
+          <p className="font-medium">
+            {data.square_off.status === 'pending' && 'Square-off has not reported yet'}
+            {data.square_off.status === 'clear' && 'Square-off finished: nothing was open'}
+            {data.square_off.status === 'ok' && `Square-off finished: ${data.square_off.closed_success} closed`}
+            {data.square_off.status === 'failed' && `Square-off: ${data.square_off.closed_failed} of ${data.square_off.total} failed`}
+          </p>
+          {data.square_off.status === 'failed' && (
+            <p className="mt-1 text-muted-foreground">Close the leftover positions in Upstox.</p>
+          )}
+        </div>
+      )}
+
+      {data?.entries_blocked && (
+        <div role="alert" className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+          <p className="font-medium text-warning">New buys are being skipped</p>
+          <p className="mt-1 text-muted-foreground">
+            {data.entries_blocked_reason ?? 'The live quote was missing or too old.'}
+          </p>
+        </div>
+      )}
+
       {bots.length > 0 && (
         <div className="rounded-lg border border-border bg-surface-1 px-4 py-3">
           <div className="mb-2 flex items-center justify-between gap-2">
@@ -263,7 +293,12 @@ export default function DashboardPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Live Market (3s polling)
             </p>
-            {isStale && <StaleIndicator isStale={isStale} />}
+            {isStale && (
+              <StaleIndicator
+                isStale={isStale}
+                note="Buys are skipped only when the REST quote at place time is missing or the last trade is older than 60 seconds."
+              />
+            )}
           </div>
           {liveMarketPending ? (
             <div className="space-y-3">

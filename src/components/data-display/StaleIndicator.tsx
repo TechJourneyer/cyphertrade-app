@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils'
 export interface StaleIndicatorProps {
   isStale: boolean
   lastUpdated?: Date | string | null
+  note?: string
 }
 
-export function StaleIndicator({ isStale, lastUpdated }: StaleIndicatorProps) {
+export function StaleIndicator({ isStale, lastUpdated, note }: StaleIndicatorProps) {
   if (!isStale) return null
 
   const getTimeSince = () => {
@@ -24,12 +25,15 @@ export function StaleIndicator({ isStale, lastUpdated }: StaleIndicatorProps) {
   }
 
   return (
-    <div className={cn(
-      'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium',
-      'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border border-yellow-500/30',
-    )}>
-      <AlertCircle className="h-3.5 w-3.5" />
-      <span>Data may be stale — last updated {getTimeSince()}</span>
+    <div className="flex flex-col items-end gap-1">
+      <div className={cn(
+        'inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium',
+        'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border border-yellow-500/30',
+      )}>
+        <AlertCircle className="h-3.5 w-3.5" />
+        <span>Screen prices are old — last updated {getTimeSince()}. This does not block buys.</span>
+      </div>
+      {note && <p className="max-w-sm text-right text-[11px] text-muted-foreground">{note}</p>}
     </div>
   )
 }

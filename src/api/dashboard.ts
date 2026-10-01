@@ -34,6 +34,15 @@ interface RawDashboardResponse {
   failed_jobs_today?: number
   last_failed_job?: string | null
   last_failed_at?: string | null
+  square_off?: {
+    status: 'pending' | 'clear' | 'ok' | 'failed'
+    total: number
+    closed_success: number
+    closed_failed: number
+    ran_at: string | null
+  } | null
+  entries_blocked?: boolean
+  entries_blocked_reason?: string | null
 }
 
 export async function getDashboard(accountId?: number | null): Promise<DashboardData> {
@@ -57,5 +66,8 @@ export async function getDashboard(accountId?: number | null): Promise<Dashboard
     failed_jobs_today: raw.failed_jobs_today ?? 0,
     last_failed_job: raw.last_failed_job ?? null,
     last_failed_at: raw.last_failed_at ?? null,
+    square_off: raw.square_off ?? null,
+    entries_blocked: Boolean(raw.entries_blocked),
+    entries_blocked_reason: raw.entries_blocked_reason ?? null,
   }
 }
