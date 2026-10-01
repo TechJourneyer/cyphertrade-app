@@ -140,9 +140,13 @@ export default function DashboardPage() {
           role="alert"
           className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm"
         >
-          <p className="font-medium text-warning">Broker terminal is off</p>
+          <p className="font-medium text-warning">
+            {data.morning_oauth_alert ? 'Morning alert: broker terminal is off' : 'Broker terminal is off'}
+          </p>
           <p className="mt-1 text-muted-foreground">
-            Connect Upstox before 09:15 IST. Order jobs will skip until OAuth is complete.
+            {data.morning_oauth_alert
+              ? 'Connect Upstox before 09:15 IST. Order jobs will skip until OAuth is complete.'
+              : 'Order jobs skip until OAuth is complete. The token normally expires at 03:30 IST the next morning.'}
           </p>
           <Link
             href={activeAccount ? `/trading-accounts/${activeAccount.id}/edit` : '/trading-accounts'}

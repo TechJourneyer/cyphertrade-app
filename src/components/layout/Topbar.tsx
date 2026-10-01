@@ -21,6 +21,19 @@ interface TopbarProps {
   className?: string
 }
 
+function terminalExpiryLabel(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const expires = new Date(iso)
+  if (Number.isNaN(expires.getTime())) return null
+  const clock = expires.toLocaleTimeString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+  return `Expires ${clock} IST`
+}
+
 function getInitials(name: string): string {
   return name
     .split(' ')
@@ -84,6 +97,9 @@ export function Topbar({ className }: TopbarProps) {
                       activeAccount.is_terminal_on ? 'text-success' : 'text-warning',
                     )}>
                       {activeAccount.is_terminal_on ? 'Terminal On' : 'Terminal Off'}
+                      {activeAccount.is_terminal_on && terminalExpiryLabel(activeAccount.expiry_time)
+                        ? ` · ${terminalExpiryLabel(activeAccount.expiry_time)}`
+                        : ''}
                     </span>
                   )}
                 </div>
@@ -126,6 +142,9 @@ export function Topbar({ className }: TopbarProps) {
                     <span className="truncate">{acc.account_name}</span>
                     <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
                       {acc.app_name} • {acc.is_terminal_on ? 'Terminal On' : 'Terminal Off'}
+                      {acc.is_terminal_on && terminalExpiryLabel(acc.expiry_time)
+                        ? ` · ${terminalExpiryLabel(acc.expiry_time)}`
+                        : ''}
                     </span>
                   </div>
                   {!isAllAccounts && acc.id === activeAccount?.id && (

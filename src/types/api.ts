@@ -42,6 +42,8 @@ export interface DashboardData {
   active_bots:        number
   active_terminals:   number
   oauth_required:     boolean
+  morning_oauth_alert: boolean
+  token_expires_at:   string | null
   today_trades:       number
   today_pnl:          number
   filled_orders:      number
