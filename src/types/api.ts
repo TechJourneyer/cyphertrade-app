@@ -50,6 +50,10 @@ export interface DashboardData {
   market_status:      'open' | 'closed' | 'holiday'
   market_status_label: string
   last_sync_at:       string | null
+  pending_after_cutoff: number
+  failed_jobs_today:  number
+  last_failed_job:    string | null
+  last_failed_at:     string | null
 }
 
 // ─── Bots ────────────────────────────────────────────────────────────────────

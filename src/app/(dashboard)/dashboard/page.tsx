@@ -157,6 +157,38 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {(data?.pending_after_cutoff ?? 0) > 0 && (
+        <div
+          role="alert"
+          className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm"
+        >
+          <p className="font-medium text-warning">
+            {data?.pending_after_cutoff} entry still not filled after 10:45
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            SMA44 does not open new entries after 10:45. Check these trades before leaving the screen.
+          </p>
+          <Link href="/trades" className="mt-2 inline-flex text-xs font-medium text-warning underline-offset-2 hover:underline">
+            Open trades
+          </Link>
+        </div>
+      )}
+
+      {(data?.failed_jobs_today ?? 0) > 0 && (
+        <div
+          role="alert"
+          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm"
+        >
+          <p className="font-medium text-destructive">
+            {data?.failed_jobs_today} failed job{data?.failed_jobs_today === 1 ? '' : 's'} today
+          </p>
+          <p className="mt-1 text-muted-foreground">
+            Latest: {data?.last_failed_job ?? 'unknown'}
+            {data?.last_failed_at ? ` at ${new Date(data.last_failed_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : ''}
+          </p>
+        </div>
+      )}
+
       {bots.length > 0 && (
         <div className="rounded-lg border border-border bg-surface-1 px-4 py-3">
           <div className="mb-2 flex items-center justify-between gap-2">

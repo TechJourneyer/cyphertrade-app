@@ -30,6 +30,10 @@ interface RawDashboardResponse {
   market_status?: 'open' | 'closed' | 'holiday'
   market_status_label?: string
   last_sync_at?: string | null
+  pending_after_cutoff?: number
+  failed_jobs_today?: number
+  last_failed_job?: string | null
+  last_failed_at?: string | null
 }
 
 export async function getDashboard(accountId?: number | null): Promise<DashboardData> {
@@ -49,5 +53,9 @@ export async function getDashboard(accountId?: number | null): Promise<Dashboard
     market_status: marketStatus,
     market_status_label: raw.market_status_label ?? marketStatus.charAt(0).toUpperCase() + marketStatus.slice(1),
     last_sync_at: raw.last_sync_at ?? raw.market?.last_sync ?? null,
+    pending_after_cutoff: raw.pending_after_cutoff ?? 0,
+    failed_jobs_today: raw.failed_jobs_today ?? 0,
+    last_failed_job: raw.last_failed_job ?? null,
+    last_failed_at: raw.last_failed_at ?? null,
   }
 }
