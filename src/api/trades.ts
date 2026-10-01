@@ -3,7 +3,11 @@ import type { Trade, PaginationMeta } from '@/types/api'
 
 export interface TradesListResponse {
   data: Trade[]
-  meta: PaginationMeta
+  meta: PaginationMeta & {
+    today_trades?: number
+    today_pnl?: number
+    attention_count?: number
+  }
 }
 
 export interface TradeFilters {
@@ -19,7 +23,7 @@ export interface TradeFilters {
  * List trades with filters
  */
 export async function list(page = 1, perPage = 20, filters?: TradeFilters): Promise<TradesListResponse> {
-  return apiList<Trade>('/trades', { page, per_page: perPage, ...filters })
+  return apiList<Trade>('/trades', { page, per_page: perPage, ...filters }) as Promise<TradesListResponse>
 }
 
 /**
