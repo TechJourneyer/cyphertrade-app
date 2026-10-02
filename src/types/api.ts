@@ -63,6 +63,9 @@ export interface DashboardData {
   } | null
   entries_blocked: boolean
   entries_blocked_reason: string | null
+  capital: Array<{ id: number; name: string; active: boolean; committed: number; max: number }>
+  day_strip: { signals: number; pending: number; open: number; rejected: number; failed_jobs: number }
+  sync_alerts: Array<{ name: string; last_success_at: string | null; stale: boolean }>
 }
 
 // ─── Bots ────────────────────────────────────────────────────────────────────

@@ -43,6 +43,9 @@ interface RawDashboardResponse {
   } | null
   entries_blocked?: boolean
   entries_blocked_reason?: string | null
+  capital?: Array<{ id: number; name: string; active: boolean; committed: number; max: number }>
+  day_strip?: { signals: number; pending: number; open: number; rejected: number; failed_jobs: number }
+  sync_alerts?: Array<{ name: string; last_success_at: string | null; stale: boolean }>
 }
 
 export async function getDashboard(accountId?: number | null): Promise<DashboardData> {
@@ -69,5 +72,8 @@ export async function getDashboard(accountId?: number | null): Promise<Dashboard
     square_off: raw.square_off ?? null,
     entries_blocked: Boolean(raw.entries_blocked),
     entries_blocked_reason: raw.entries_blocked_reason ?? null,
+    capital: raw.capital ?? [],
+    day_strip: raw.day_strip ?? { signals: 0, pending: 0, open: 0, rejected: 0, failed_jobs: 0 },
+    sync_alerts: raw.sync_alerts ?? [],
   }
 }

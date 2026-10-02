@@ -23,7 +23,7 @@ import { ErrorState } from '@/components/data-display/ErrorState'
 import { StatusBadge } from '@/components/data-display/StatusBadge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, formatCurrency } from '@/lib/utils'
 import Link from 'next/link'
 import type { Bot as BotType } from '@/types/api'
 
@@ -198,8 +198,9 @@ export default function DashboardPage() {
               : 'border-border bg-surface-1'
           }`}
         >
-          <p className="font-medium">
-            {data.square_off.status === 'pending' && 'Square-off has not reported yet'}
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Square-off</p>
+          <p className="mt-1 font-medium">
+            {data.square_off.status === 'pending' && 'Has not reported yet'}
             {data.square_off.status === 'clear' && 'Square-off finished: nothing was open'}
             {data.square_off.status === 'ok' && `Square-off finished: ${data.square_off.closed_success} closed`}
             {data.square_off.status === 'failed' && `Square-off: ${data.square_off.closed_failed} of ${data.square_off.total} failed`}
@@ -216,6 +217,36 @@ export default function DashboardPage() {
           <p className="mt-1 text-muted-foreground">
             {data.entries_blocked_reason ?? 'The live quote was missing or too old.'}
           </p>
+        </div>
+      )}
+
+      {(data?.sync_alerts ?? []).some((item) => item.stale) && (
+        <div role="alert" className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+          <p className="font-medium text-warning">A sync is more than 5 minutes behind</p>
+          <ul className="mt-1 text-muted-foreground">
+            {(data?.sync_alerts ?? []).filter((item) => item.stale).map((item) => (
+              <li key={item.name}>
+                {item.name}: {item.last_success_at ? `last success ${new Date(item.last_success_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}` : 'no success today'}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {data?.day_strip && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+          {[
+            ['Signals', data.day_strip.signals],
+            ['Pending', data.day_strip.pending],
+            ['Open', data.day_strip.open],
+            ['Rejected', data.day_strip.rejected],
+            ['Failed jobs', data.day_strip.failed_jobs],
+          ].map(([label, value]) => (
+            <div key={String(label)} className="rounded-lg border border-border bg-surface-1 px-3 py-2">
+              <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="font-mono text-lg font-semibold">{value}</p>
+            </div>
+          ))}
         </div>
       )}
 
@@ -237,6 +268,22 @@ export default function DashboardPage() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{bot.name}</p>
                     <StatusBadge status={isActive ? 'active' : 'paused'} />
+                    {(() => {
+                      const cap = data?.capital?.find((row) => row.id === bot.id)
+                      if (!cap || cap.max <= 0) return null
+                      const pct = Math.min(100, Math.round((cap.committed / cap.max) * 100))
+                      return (
+                        <div className="mt-2 max-w-xs">
+                          <div className="mb-1 flex justify-between text-[11px] text-muted-foreground">
+                            <span>{formatCurrency(cap.committed, 0)} used</span>
+                            <span>{formatCurrency(cap.max, 0)} max</span>
+                          </div>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
+                            <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                   <Button
                     type="button"
