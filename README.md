@@ -4,6 +4,8 @@ Next.js 14 UI for Cyphertrade. It authenticates against the API, manages trading
 
 It does **not** run trading crons or talk to Upstox. All of that is [cyphertrade-api](../cyphertrade-api).
 
+**Production (Lightsail):** [cyphertrade-api/PRODUCTION_PLAN/production-install.md](../cyphertrade-api/PRODUCTION_PLAN/production-install.md)
+
 ---
 
 ## 1. Introduction
