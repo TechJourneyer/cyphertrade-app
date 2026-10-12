@@ -25,7 +25,7 @@ export const CREDENTIAL_FIELDS: Record<string, CredentialField[]> = {
       required: true,
       options: { '1': 'Yes', '0': 'No' },
     },
-    { name: 'sandboxToken', label: 'Sandbox Token', type: 'password', required: false },
+    { name: 'sandboxToken', label: 'Sandbox Token', type: 'password', required: false, clearable: true },
   ],
   zerodha: [
     { name: 'accessKeyId',     label: 'Access Key ID',     type: 'text',     required: true },
@@ -103,11 +103,15 @@ export function CredentialInput({ field, value, onChange, hasSaved }: Credential
     )
   }
 
+  const placeholder = field.clearable
+    ? (hasSaved ? 'Leave blank to remove the saved token' : `Enter ${field.label}`)
+    : (hasSaved ? '••••••••  (leave blank to keep existing)' : `Enter ${field.label}`)
+
   return (
     <Input
       type={field.type === 'password' ? 'password' : 'text'}
       required={field.required}
-      placeholder={hasSaved ? '••••••••  (leave blank to keep existing)' : `Enter ${field.label}`}
+      placeholder={placeholder}
       value={value}
       onChange={(e) => onChange(e.target.value)}
     />

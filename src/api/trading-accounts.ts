@@ -9,6 +9,10 @@ export interface CredentialField {
   validation_rule?: string
   options?:         Record<string, string>
   has_value?:       boolean
+  /** When true, a blank update removes the saved value instead of keeping it. */
+  clearable?:       boolean
+  /** Current value for non-secret fields such as sandbox mode. */
+  value?:           string
 }
 
 export interface CreateTradingAccountPayload {
@@ -21,7 +25,8 @@ export interface CreateTradingAccountPayload {
 export interface UpdateTradingAccountPayload {
   account_name?: string
   status?: number        // 1 = active, 0 = inactive
-  credentials?: Record<string, string>
+  /** Null clears a clearable credential such as the sandbox token. */
+  credentials?: Record<string, string | null>
 }
 
 export interface TradingAccountsListResponse {
