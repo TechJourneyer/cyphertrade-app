@@ -31,6 +31,17 @@ function terminalExpiryLabel(iso: string | null | undefined): string | null {
     minute: '2-digit',
     hour12: false,
   })
+  // Daily OAuth expires the next morning, so the clock is enough.
+  // A sandbox token lasts 30 days, so include the date.
+  const hoursAway = (expires.getTime() - Date.now()) / 3_600_000
+  if (hoursAway > 36) {
+    const day = expires.toLocaleDateString('en-IN', {
+      timeZone: 'Asia/Kolkata',
+      day: '2-digit',
+      month: 'short',
+    })
+    return `Expires ${day} ${clock} IST`
+  }
   return `Expires ${clock} IST`
 }
 

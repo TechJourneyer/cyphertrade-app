@@ -21,6 +21,7 @@ import { ToggleSwitch, CredentialInput } from '@/components/forms/trading-accoun
 function TerminalSection({ account }: { account?: TradingAccount | undefined }) {
   const queryClient = useQueryClient()
   const isOn = !!account?.is_terminal_on
+  const sandbox = !!account?.sandbox_enabled
   const [isConnecting, setIsConnecting] = useState(false)
 
   const canAct = Boolean(account?.id)
@@ -63,43 +64,49 @@ function TerminalSection({ account }: { account?: TradingAccount | undefined }) 
         <div>
           <p className="text-sm font-medium text-foreground">Terminal Connection</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {isOn
-              ? 'Your trading terminal is active. You can place orders.'
-              : 'Connect your broker account to activate the terminal.'}
+            {sandbox
+              ? (isOn
+                  ? 'Sandbox terminal is on. Orders use the saved sandbox token directly.'
+                  : 'Sandbox mode cannot use the broker login redirect. Paste the sandbox token below and save to turn the terminal on.')
+              : (isOn
+                  ? 'Your trading terminal is active. You can place orders.'
+                  : 'Connect your broker account to activate the terminal.')}
           </p>
         </div>
         <StatusBadge status={isOn ? 'active' : 'inactive'} />
       </div>
 
-      <div className="flex gap-2">
-        {isOn ? (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
-            disabled={disconnectMutation.isPending || !canAct}
-            onClick={() => disconnectMutation.mutate()}
-          >
-            {disconnectMutation.isPending
-              ? <Loader2 size={13} className="animate-spin" />
-              : <WifiOff size={13} />}
-            Disconnect Terminal
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            className="gap-1.5 text-xs"
-            disabled={isConnecting || !canAct}
-            onClick={handleConnect}
-          >
-            {isConnecting
-              ? <Loader2 size={13} className="animate-spin" />
-              : <Wifi size={13} />}
-            Connect Terminal
-            <ExternalLink size={11} className="ml-0.5 opacity-70" />
-          </Button>
-        )}
-      </div>
+      {(isOn || !sandbox) && (
+        <div className="flex gap-2">
+          {isOn ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
+              disabled={disconnectMutation.isPending || !canAct}
+              onClick={() => disconnectMutation.mutate()}
+            >
+              {disconnectMutation.isPending
+                ? <Loader2 size={13} className="animate-spin" />
+                : <WifiOff size={13} />}
+              Disconnect Terminal
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              className="gap-1.5 text-xs"
+              disabled={isConnecting || !canAct}
+              onClick={handleConnect}
+            >
+              {isConnecting
+                ? <Loader2 size={13} className="animate-spin" />
+                : <Wifi size={13} />}
+              Connect Terminal
+              <ExternalLink size={11} className="ml-0.5 opacity-70" />
+            </Button>
+          )}
+        </div>
+      )}
 
       {!canAct && (
         <p className="text-xs text-muted-foreground">Account information is still loading.</p>
@@ -133,6 +140,7 @@ export default function EditTradingAccountPage() {
   const [isActive, setIsActive] = useState(true)
   const [credentials, setCredentials] = useState<Record<string, string>>({})
   const [initialised, setInitialised] = useState(false)
+  const [credsInitialised, setCredsInitialised] = useState(false)
 
   const { data: accountResponse, isLoading: accountLoading } = useQuery({
     queryKey: ['trading-accounts', 'detail', accountId],
@@ -158,6 +166,21 @@ export default function EditTradingAccountPage() {
     setInitialised(true)
   }, [account, initialised])
 
+  // Prefill non-secret selects (sandbox mode) so a save does not reset them.
+  useEffect(() => {
+    if (credsLoading || credsInitialised || !credsResponse) return
+    const next: Record<string, string> = {}
+    for (const field of credsResponse.fields ?? []) {
+      if (typeof field.value === 'string' && field.value !== '') {
+        next[field.name] = field.value
+      }
+    }
+    if (Object.keys(next).length > 0) {
+      setCredentials((prev) => ({ ...next, ...prev }))
+    }
+    setCredsInitialised(true)
+  }, [credsLoading, credsInitialised, credsResponse])
+
   const mutation = useMutation({
     mutationFn: (payload: tradingAccountsApi.UpdateTradingAccountPayload) =>
       tradingAccountsApi.update(accountId, payload),
@@ -181,13 +204,25 @@ export default function EditTradingAccountPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const filteredCreds = Object.fromEntries(
-      Object.entries(credentials).filter(([, v]) => v.trim() !== '')
-    )
+    const credentialPayload: Record<string, string | null> = {}
+
+    for (const field of credentialFields) {
+      const trimmed = (credentials[field.name] ?? '').trim()
+      if (trimmed !== '') {
+        credentialPayload[field.name] = trimmed
+        continue
+      }
+      // Clearable fields (sandbox token) accept a blank value and drop the saved token.
+      // Other secrets stay omitted so a blank input keeps the stored value.
+      if (field.clearable) {
+        credentialPayload[field.name] = null
+      }
+    }
+
     mutation.mutate({
       account_name: accountName,
       status: isActive ? 1 : 0,
-      ...(Object.keys(filteredCreds).length > 0 ? { credentials: filteredCreds } : {}),
+      ...(Object.keys(credentialPayload).length > 0 ? { credentials: credentialPayload } : {}),
     })
   }
 
@@ -293,26 +328,41 @@ export default function EditTradingAccountPage() {
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Broker Credentials
                 <span className="ml-2 font-normal normal-case">
-                  — leave blank to keep saved values
+                  — leave secrets blank to keep saved values
                 </span>
               </p>
-              {credentialFields.map((field) => (
+              {credentialFields.map((field) => {
+                // A saved secret can stay blank; the API keeps the stored value.
+                // HTML required would block saving the sandbox token otherwise.
+                const inputField = {
+                  ...field,
+                  required: Boolean(field.required) && !field.has_value,
+                }
+                return (
                 <div key={field.name} className="space-y-1.5">
                   <label className="text-sm font-medium text-foreground">
                     {field.label}
-                    {field.required && <span className="text-destructive"> *</span>}
+                    {inputField.required && <span className="text-destructive"> *</span>}
                     {field.has_value && (
                       <span className="ml-2 text-xs font-normal text-emerald-600">✓ saved</span>
                     )}
                   </label>
                   <CredentialInput
-                    field={field}
+                    field={inputField}
                     value={credentials[field.name] ?? ''}
                     onChange={(v) => setCredentials((prev) => ({ ...prev, [field.name]: v }))}
                     hasSaved={field.has_value}
                   />
+                  {field.clearable && (
+                    <p className="text-xs text-muted-foreground">
+                      {field.has_value
+                        ? 'A token is saved. Leave this blank and save to remove it. Paste a new token to replace it.'
+                        : 'Paste the sandbox access token from the broker portal. With sandbox mode set to Yes, saving it turns the terminal on.'}
+                    </p>
+                  )}
                 </div>
-              ))}
+                )
+              })}
             </>
           ) : null}
 
