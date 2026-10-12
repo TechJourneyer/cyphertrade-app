@@ -331,17 +331,24 @@ export default function EditTradingAccountPage() {
                   — leave secrets blank to keep saved values
                 </span>
               </p>
-              {credentialFields.map((field) => (
+              {credentialFields.map((field) => {
+                // A saved secret can stay blank; the API keeps the stored value.
+                // HTML required would block saving the sandbox token otherwise.
+                const inputField = {
+                  ...field,
+                  required: Boolean(field.required) && !field.has_value,
+                }
+                return (
                 <div key={field.name} className="space-y-1.5">
                   <label className="text-sm font-medium text-foreground">
                     {field.label}
-                    {field.required && <span className="text-destructive"> *</span>}
+                    {inputField.required && <span className="text-destructive"> *</span>}
                     {field.has_value && (
                       <span className="ml-2 text-xs font-normal text-emerald-600">✓ saved</span>
                     )}
                   </label>
                   <CredentialInput
-                    field={field}
+                    field={inputField}
                     value={credentials[field.name] ?? ''}
                     onChange={(v) => setCredentials((prev) => ({ ...prev, [field.name]: v }))}
                     hasSaved={field.has_value}
@@ -354,7 +361,8 @@ export default function EditTradingAccountPage() {
                     </p>
                   )}
                 </div>
-              ))}
+                )
+              })}
             </>
           ) : null}
 
