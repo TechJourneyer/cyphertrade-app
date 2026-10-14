@@ -9,6 +9,8 @@ export interface CredentialField {
   validation_rule?: string
   options?:         Record<string, string>
   has_value?:       boolean
+  /** Present for non-secret selects such as sandbox mode. Secrets are never returned. */
+  value?:           string
 }
 
 export interface CreateTradingAccountPayload {
@@ -83,7 +85,8 @@ export async function getRedirectUrl(id: number): Promise<string | undefined> {
 }
 
 /**
- * Disconnect (stop) the terminal — clears auth_code, resets auth_status to inactive
+ * Disconnect (stop) the terminal — clears auth_code, resets auth_status to inactive.
+ * Sandbox accounts also drop the saved sandbox token.
  */
 export async function disconnect(id: number): Promise<TradingAccount> {
   return apiPost<TradingAccount>(`/trading-accounts/${id}/disconnect`)

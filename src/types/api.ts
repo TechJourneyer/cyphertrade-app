@@ -106,6 +106,8 @@ export interface TradingAccount {
   status:           string
   auth_status:      string
   is_terminal_on:   boolean
+  sandbox_enabled:  boolean
+  has_sandbox_token: boolean
   expiry_time:      string | null
   last_verified_at: string | null
   created_at:       string
