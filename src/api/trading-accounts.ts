@@ -91,3 +91,20 @@ export async function getRedirectUrl(id: number): Promise<string | undefined> {
 export async function disconnect(id: number): Promise<TradingAccount> {
   return apiPost<TradingAccount>(`/trading-accounts/${id}/disconnect`)
 }
+
+export interface TokenCheckResult {
+  kind: 'sandbox' | 'live' | 'analytics' | string
+  ok: boolean
+  message: string
+}
+
+/**
+ * Check the saved live token and the sandbox token without placing an order.
+ * Pass sandbox_token to test a value that has not been saved yet.
+ */
+export async function verifyToken(
+  id: number,
+  payload?: { sandbox_token?: string },
+): Promise<{ checks: TokenCheckResult[] }> {
+  return apiPost<{ checks: TokenCheckResult[] }>(`/trading-accounts/${id}/verify-token`, payload ?? {})
+}

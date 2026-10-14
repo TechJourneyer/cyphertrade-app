@@ -81,6 +81,14 @@ function TerminalSection({
     onSettled: () => setPendingAction(null),
   })
 
+  const verifyMutation = useMutation({
+    mutationFn: () => {
+      if (!canAct) return Promise.reject(new Error('Missing account id'))
+      const typed = sandboxToken.trim()
+      return tradingAccountsApi.verifyToken(account!.id, typed !== '' ? { sandbox_token: typed } : {})
+    },
+  })
+
   const handleConnect = async () => {
     if (!canAct) {
       // defensive: avoid calling API with undefined id
@@ -197,6 +205,35 @@ function TerminalSection({
             </Button>
           )}
         </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          disabled={!canAct || verifyMutation.isPending}
+          onClick={() => verifyMutation.mutate()}
+        >
+          {verifyMutation.isPending ? 'Checking token…' : 'Check token'}
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          {sandboxEnabled
+            ? 'Checks the sandbox token. A value in the box is tested before it is saved. A saved live token is checked too.'
+            : 'Checks the live broker token from the last login.'}
+        </p>
+      </div>
+
+      {verifyMutation.data?.checks.map((check) => (
+        <p key={check.kind} className={`text-xs ${check.ok ? 'text-emerald-700' : 'text-destructive'}`}>
+          {check.kind}: {check.message}
+        </p>
+      ))}
+      {verifyMutation.isError && (
+        <p className="text-xs text-destructive">
+          {apiErrorMessage(verifyMutation.error, 'Token check failed')}
+        </p>
       )}
 
       {!canAct && (
