@@ -56,7 +56,6 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Instruments', href: '/instruments', icon: BookOpen },
       { label: 'Holidays', href: '/market/holidays', icon: CalendarDays },
-      { label: 'Index files', href: '/market/indices', icon: Table2, role: 'admin' },
       { label: 'Corporate actions', href: '/corporate-actions', icon: Split },
       { label: 'Screener',    href: '/screener',    icon: ScanLine },
     ],
@@ -72,6 +71,7 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Users',       href: '/users',       icon: Users,       role: 'admin' },
       { label: 'Roles',       href: '/roles',       icon: ShieldCheck, role: 'admin' },
+      { label: 'Index files', href: '/market/indices', icon: Table2, role: 'admin' },
       { label: 'Analytics token', href: '/admin/analytics-token', icon: KeyRound, role: 'admin' },
     ],
   },

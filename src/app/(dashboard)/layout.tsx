@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { getMe } from '@/api/auth'
 import { useAuthStore, selectHasHydrated, selectIsAuthed } from '@/store/auth'
 import { useTradingAccount } from '@/hooks/useTradingAccount'
 import { Sidebar } from '@/components/layout/Sidebar'
@@ -24,6 +25,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       router.replace('/login')
     }
   }, [hasHydrated, isAuthed, router])
+
+  useEffect(() => {
+    if (!hasHydrated || !isAuthed) return
+    let cancelled = false
+    getMe()
+      .then((user) => {
+        if (!cancelled) useAuthStore.getState().setUser(user)
+      })
+      .catch(() => {
+        // A 401 is handled by the API client. Keep the saved session for other errors.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [hasHydrated, isAuthed])
 
   // While Zustand rehydrates from localStorage, show a minimal loading state
   if (!hasHydrated) {

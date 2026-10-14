@@ -66,8 +66,9 @@ export async function downloadIndexTemplate(): Promise<void> {
   URL.revokeObjectURL(url)
 }
 
-export async function importIndexes(file: File): Promise<IndexImportResult> {
+export async function importIndexes(file: File, indexId: number): Promise<IndexImportResult> {
   const body = new FormData()
+  body.append('index_id', String(indexId))
   body.append('file', file)
   const response = await apiClient.post<{ data: IndexImportResult }>('/market/indices/import', body, {
     headers: { 'Content-Type': undefined },

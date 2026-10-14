@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { DataTable, type DataTableColumn } from '@/components/data-display/DataTable'
+import { SELECT_CLASS } from '@/components/forms/trading-account-fields'
 import { PageShell } from '@/components/layout/PageShell'
 import { useAuth } from '@/hooks/useAuth'
 import * as marketAdminApi from '@/api/market-admin'
@@ -20,7 +21,9 @@ function apiErrorMessage(error: unknown, fallback: string): string {
 export default function MarketIndicesPage() {
   const { hasHydrated, hasRole } = useAuth()
   const queryClient = useQueryClient()
+  const [indexId, setIndexId] = useState('')
   const [file, setFile] = useState<File | null>(null)
+  const [fileKey, setFileKey] = useState(0)
   const [result, setResult] = useState<IndexImportResult | null>(null)
 
   const indexes = useQuery({
@@ -30,10 +33,11 @@ export default function MarketIndicesPage() {
   })
 
   const upload = useMutation({
-    mutationFn: (next: File) => marketAdminApi.importIndexes(next),
+    mutationFn: (next: { file: File; indexId: number }) => marketAdminApi.importIndexes(next.file, next.indexId),
     onSuccess: (payload) => {
       setResult(payload)
       setFile(null)
+      setFileKey((key) => key + 1)
       queryClient.invalidateQueries({ queryKey: ['market-indices'] })
     },
   })
@@ -62,21 +66,39 @@ export default function MarketIndicesPage() {
   return (
     <PageShell
       title="Index constituents"
-      description="Upload a CSV to replace Nifty index membership. Symbols must already exist as instruments."
-      breadcrumbs={[{ label: 'Market' }, { label: 'Index constituents' }]}
+      description="Choose an index, then upload its symbols. Matching uses the exchange already stored on that index."
+      breadcrumbs={[{ label: 'Admin' }, { label: 'Index files' }]}
     >
       <div className="max-w-2xl rounded-lg border border-border bg-card p-5 space-y-4">
+        <div className="space-y-1.5">
+          <label htmlFor="index-id" className="text-sm font-medium text-foreground">Index</label>
+          <select
+            id="index-id"
+            className={SELECT_CLASS}
+            value={indexId}
+            onChange={(event) => {
+              setIndexId(event.target.value)
+              setResult(null)
+            }}
+          >
+            <option value="">Select an index</option>
+            {(indexes.data ?? []).map((index) => (
+              <option key={index.id} value={index.id}>
+                {index.name} ({index.exchange})
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="space-y-1">
           <p className="text-sm font-medium text-foreground">CSV format</p>
           <p className="text-xs text-muted-foreground">
-            Required columns are <span className="font-medium text-foreground">index_name</span> and <span className="font-medium text-foreground">symbol</span>.
-            <span className="font-medium text-foreground"> exchange</span> is optional and defaults to NSE.
-            index_name must be one of NIFTY 50, NIFTY 100, NIFTY 200, NIFTY BANK, NIFTY AUTO, or NIFTY MIDCAP 50.
-            symbol must match the instrument trading symbol.
+            The file needs a <span className="font-medium text-foreground">symbol</span> column.
+            Each symbol is matched to an instrument on the selected index exchange and saved on that index.
           </p>
-          <pre className="overflow-x-auto rounded-md bg-muted/40 px-3 py-2 text-xs text-foreground">{`index_name,symbol,exchange
-NIFTY 50,RELIANCE,NSE
-NIFTY BANK,HDFCBANK,NSE`}</pre>
+          <pre className="overflow-x-auto rounded-md bg-muted/40 px-3 py-2 text-xs text-foreground">{`symbol
+RELIANCE
+TCS`}</pre>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -84,6 +106,7 @@ NIFTY BANK,HDFCBANK,NSE`}</pre>
             Download template
           </Button>
           <input
+            key={fileKey}
             type="file"
             accept=".csv,text/csv"
             className="text-xs text-muted-foreground"
@@ -95,8 +118,8 @@ NIFTY BANK,HDFCBANK,NSE`}</pre>
           <Button
             type="button"
             size="sm"
-            disabled={!file || upload.isPending}
-            onClick={() => file && upload.mutate(file)}
+            disabled={!indexId || !file || upload.isPending}
+            onClick={() => file && indexId && upload.mutate({ file, indexId: Number(indexId) })}
           >
             {upload.isPending ? 'Uploading…' : 'Upload CSV'}
           </Button>
@@ -127,7 +150,7 @@ NIFTY BANK,HDFCBANK,NSE`}</pre>
         data={indexes.data ?? []}
         isLoading={indexes.isLoading}
         isEmpty={!indexes.isLoading && (indexes.data?.length ?? 0) === 0}
-        emptyText="No indexes have been uploaded yet."
+        emptyText="No indexes are stored yet."
       />
     </PageShell>
   )
