@@ -166,7 +166,7 @@ export default function DashboardPage() {
             {data?.pending_after_cutoff} entry still not filled after 10:45
           </p>
           <p className="mt-1 text-muted-foreground">
-            SMA44 does not open new entries after 10:45. Check these trades before leaving the screen.
+            SMA44 does not open new entries after 09:30. Check these trades before leaving the screen.
           </p>
           <Link href="/trades" className="mt-2 inline-flex text-xs font-medium text-warning underline-offset-2 hover:underline">
             Open trades
