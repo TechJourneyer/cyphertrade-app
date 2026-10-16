@@ -59,11 +59,11 @@ export async function signals(id: number): Promise<unknown> {
 }
 
 /**
- * Run backtest — uses a longer timeout (5 min) as the strategy iterates
- * many instruments and makes broker API calls.
+ * Run backtest. The first run downloads candles from the broker and can take
+ * several minutes. Later runs read the saved candles.
  */
 export async function runBacktest(payload: BacktestPayload): Promise<{ report: BacktestResult | null }> {
   const { apiClient } = await import('./client')
-  const res = await apiClient.post<{ data: { report: BacktestResult | null } }>('/backtest', payload, { timeout: 300_000 })
+  const res = await apiClient.post<{ data: { report: BacktestResult | null } }>('/backtest', payload, { timeout: 600_000 })
   return res.data.data
 }
