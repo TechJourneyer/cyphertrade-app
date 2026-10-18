@@ -15,6 +15,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Next.js does not require public/. The production stage copies it unconditionally.
+RUN mkdir -p public
+
 # Build arguments for environment
 ARG NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
