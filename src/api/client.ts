@@ -47,6 +47,17 @@ apiClient.interceptors.response.use(
   },
 )
 
+function fallbackMeta(total: number): PaginationMeta {
+  return {
+    current_page: 1,
+    last_page: 1,
+    per_page: total,
+    total,
+    from: total > 0 ? 1 : null,
+    to: total > 0 ? total : null,
+  }
+}
+
 /** Convenience wrappers that unwrap the `data` field from ApiResponse */
 export async function apiGet<T>(path: string, params?: Record<string, unknown>): Promise<T> {
   const res = await apiClient.get<{ data: T }>(path, { params })
@@ -65,25 +76,20 @@ export async function apiList<T>(path: string, params?: Record<string, unknown>)
   if (Array.isArray(payload)) {
     return {
       data: payload,
-      meta: res.data.meta ?? { current_page: 1, last_page: 1, per_page: payload.length, total: payload.length },
+      meta: res.data.meta ?? fallbackMeta(payload.length),
     }
   }
 
   if (payload && Array.isArray(payload.data)) {
     return {
       data: payload.data,
-      meta: res.data.meta ?? payload.meta ?? {
-        current_page: 1,
-        last_page: 1,
-        per_page: payload.data.length,
-        total: payload.data.length,
-      },
+      meta: res.data.meta ?? payload.meta ?? fallbackMeta(payload.data.length),
     }
   }
 
   return {
     data: [],
-    meta: res.data.meta ?? { current_page: 1, last_page: 1, per_page: 0, total: 0 },
+    meta: res.data.meta ?? fallbackMeta(0),
   }
 }
 
