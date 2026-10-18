@@ -3,7 +3,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export interface DataTableColumn<T> {
-  key: keyof T
+  /** A row field, or a display-only id when `render` supplies the cell. */
+  key: keyof T | (string & {})
   label: string
   sortable?: boolean
   render?: (value: unknown, row: T) => React.ReactNode
