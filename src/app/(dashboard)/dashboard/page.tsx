@@ -1,6 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import {
   Bot,
   TrendingUp,
@@ -12,6 +13,8 @@ import {
   Play,
 } from 'lucide-react'
 import { getDashboard } from '@/api/dashboard'
+import { createOpsLinks } from '@/api/ops'
+import { useAuth } from '@/hooks/useAuth'
 import * as botsApi from '@/api/bots'
 import { useLiveMarketPolling } from '@/hooks/useLiveMarketPolling'
 import { useTradingAccount } from '@/hooks/useTradingAccount'
@@ -29,8 +32,25 @@ import type { Bot as BotType } from '@/types/api'
 
 export default function DashboardPage() {
   const { activeAccount, activeAccountId, hasAccounts, isAllAccounts } = useTradingAccount()
+  const { hasRole } = useAuth()
   const queryClient = useQueryClient()
   const { toast } = useToast()
+  const [openingOps, setOpeningOps] = useState<'horizon' | 'log_viewer' | null>(null)
+
+  async function openOps(tool: 'horizon' | 'log_viewer') {
+    setOpeningOps(tool)
+    try {
+      const links = await createOpsLinks()
+      window.location.assign(links[tool])
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not open the tool',
+        description: err instanceof Error ? err.message : 'Request failed.',
+      })
+      setOpeningOps(null)
+    }
+  }
 
   const {
     data,
@@ -298,6 +318,35 @@ export default function DashboardPage() {
                 </div>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {hasRole('admin') && (
+        <div className="rounded-lg border border-border bg-surface-1 px-4 py-3 text-sm">
+          <p className="font-medium">Operations</p>
+          <p className="mt-1 text-muted-foreground">
+            Horizon and Log Viewer open with a short-lived link for this browser.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              loading={openingOps === 'horizon'}
+              onClick={() => openOps('horizon')}
+            >
+              Horizon
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              loading={openingOps === 'log_viewer'}
+              onClick={() => openOps('log_viewer')}
+            >
+              Log viewer
+            </Button>
           </div>
         </div>
       )}
