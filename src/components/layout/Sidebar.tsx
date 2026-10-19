@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import {
   LayoutDashboard,
   Bot,
@@ -19,10 +20,14 @@ import {
   ChevronLeft,
   ChevronRight,
   Activity,
+  Gauge,
+  ScrollText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore, selectUser } from '@/store/auth'
 import { Separator } from '@/components/ui/separator'
+import { createOpsLinks, type OpsLinks } from '@/api/ops'
+import { useToast } from '@/hooks/useToast'
 
 interface NavItem {
   label:  string
@@ -82,10 +87,33 @@ interface SidebarProps {
   onToggle:      () => void
 }
 
+const MONITOR_ITEMS: { label: string; tool: keyof OpsLinks; icon: React.ElementType }[] = [
+  { label: 'Horizon', tool: 'horizon', icon: Gauge },
+  { label: 'Log viewer', tool: 'log_viewer', icon: ScrollText },
+]
+
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const user     = useAuthStore(selectUser)
   const roles    = user?.roles ?? []
+  const { toast } = useToast()
+  const [opening, setOpening] = useState<keyof OpsLinks | null>(null)
+  const isAdmin = roles.includes('admin')
+
+  async function openMonitor(tool: keyof OpsLinks) {
+    setOpening(tool)
+    try {
+      const links = await createOpsLinks()
+      window.location.assign(links[tool])
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not open the tool',
+        description: err instanceof Error ? err.message : 'Request failed.',
+      })
+      setOpening(null)
+    }
+  }
 
   return (
     <aside
@@ -152,6 +180,38 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </div>
           )
         })}
+
+        {isAdmin && (
+          <div className="space-y-0.5">
+            {!collapsed && (
+              <p className="px-2 pb-1 text-2xs font-semibold uppercase tracking-widest text-sidebar-foreground/50">
+                Monitor
+              </p>
+            )}
+            {collapsed && <Separator className="bg-sidebar-border mx-1 mb-1" />}
+            {MONITOR_ITEMS.map((item) => {
+              const Icon = item.icon
+              return (
+                <button
+                  key={item.tool}
+                  type="button"
+                  title={collapsed ? item.label : undefined}
+                  disabled={opening !== null}
+                  onClick={() => openMonitor(item.tool)}
+                  className={cn(
+                    'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors w-full text-left',
+                    'focus-ring text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+                    'disabled:opacity-60',
+                    collapsed && 'justify-center px-0 py-2',
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {!collapsed && <span className="truncate">{item.label}</span>}
+                </button>
+              )
+            })}
+          </div>
+        )}
       </nav>
 
       {/* Collapse toggle */}
