@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   LayoutDashboard,
   Bot,
@@ -22,11 +23,13 @@ import {
   Activity,
   Gauge,
   ScrollText,
+  ListChecks,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore, selectUser } from '@/store/auth'
 import { Separator } from '@/components/ui/separator'
 import { createOpsLinks, type OpsLinks } from '@/api/ops'
+import { getSetupChecklist } from '@/api/setup'
 import { useToast } from '@/hooks/useToast'
 
 interface NavItem {
@@ -46,6 +49,7 @@ const NAV_GROUPS: NavGroup[] = [
     title: 'Overview',
     items: [
       { label: 'Dashboard',  href: '/dashboard',         icon: LayoutDashboard },
+      { label: 'Setup',      href: '/dashboard#setup',   icon: ListChecks },
     ],
   },
   {
@@ -99,6 +103,13 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const { toast } = useToast()
   const [opening, setOpening] = useState<keyof OpsLinks | null>(null)
   const isAdmin = roles.includes('admin')
+  const { data: setup } = useQuery({
+    queryKey: ['setup-checklist'],
+    queryFn: getSetupChecklist,
+    staleTime: 60_000,
+    enabled: Boolean(user),
+  })
+  const setupRemaining = setup?.remaining ?? 0
 
   async function openMonitor(tool: keyof OpsLinks) {
     setOpening(tool)
@@ -156,13 +167,19 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
               {collapsed && <Separator className="bg-sidebar-border mx-1 mb-1" />}
               {visibleItems.map((item) => {
                 const Icon      = item.icon
-                const isActive  = pathname === item.href || pathname.startsWith(`${item.href}/`)
+                const isSetup   = item.href === '/dashboard#setup'
+                const isActive  = !isSetup && (pathname === item.href || pathname.startsWith(`${item.href}/`))
 
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    title={collapsed ? item.label : undefined}
+                    onClick={() => {
+                      if (isSetup && pathname === '/dashboard') {
+                        window.location.hash = 'setup'
+                      }
+                    }}
+                    title={collapsed ? (isSetup && setupRemaining > 0 ? `Setup, ${setupRemaining} open` : item.label) : undefined}
                     className={cn(
                       'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors',
                       'focus-ring',
@@ -174,6 +191,11 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   >
                     <Icon className="h-4 w-4 shrink-0" />
                     {!collapsed && <span className="truncate">{item.label}</span>}
+                    {isSetup && setupRemaining > 0 && !collapsed && (
+                      <span className="ml-auto rounded-full bg-warning/15 px-1.5 text-[10px] font-medium text-warning">
+                        {setupRemaining}
+                      </span>
+                    )}
                   </Link>
                 )
               })}

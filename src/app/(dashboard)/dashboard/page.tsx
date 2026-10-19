@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Bot,
   TrendingUp,
@@ -20,6 +20,7 @@ import { useLiveMarketPolling } from '@/hooks/useLiveMarketPolling'
 import { useTradingAccount } from '@/hooks/useTradingAccount'
 import { useToast } from '@/hooks/useToast'
 import { PageShell } from '@/components/layout/PageShell'
+import { SetupChecklistPanel, SetupStatusButton } from '@/components/dashboard/SetupChecklist'
 import { StatCard } from '@/components/data-display/StatCard'
 import { StaleIndicator } from '@/components/data-display/StaleIndicator'
 import { ErrorState } from '@/components/data-display/ErrorState'
@@ -36,6 +37,25 @@ export default function DashboardPage() {
   const queryClient = useQueryClient()
   const { toast } = useToast()
   const [openingOps, setOpeningOps] = useState<'horizon' | 'log_viewer' | null>(null)
+  const [setupOpen, setSetupOpen] = useState(false)
+
+  useEffect(() => {
+    const openFromHash = () => {
+      if (window.location.hash === '#setup') setSetupOpen(true)
+    }
+    openFromHash()
+    window.addEventListener('hashchange', openFromHash)
+    return () => window.removeEventListener('hashchange', openFromHash)
+  }, [])
+
+  function toggleSetup() {
+    setSetupOpen((current) => {
+      const next = !current
+      const url = `${window.location.pathname}${window.location.search}${next ? '#setup' : ''}`
+      window.history.replaceState(null, '', url)
+      return next
+    })
+  }
 
   async function openOps(tool: 'horizon' | 'log_viewer') {
     setOpeningOps(tool)
@@ -142,6 +162,8 @@ export default function DashboardPage() {
               </div>
             )}
 
+            <SetupStatusButton open={setupOpen} onToggle={toggleSetup} />
+
             <button
               onClick={() => refetch()}
               disabled={isPending}
@@ -154,6 +176,8 @@ export default function DashboardPage() {
           </div>
         }
       >
+
+      {setupOpen && <SetupChecklistPanel onClose={toggleSetup} />}
 
       {data?.oauth_required && (
         <div
@@ -322,34 +346,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {hasRole('admin') && (
-        <div className="rounded-lg border border-border bg-surface-1 px-4 py-3 text-sm">
-          <p className="font-medium">Operations</p>
-          <p className="mt-1 text-muted-foreground">
-            Horizon and Log Viewer open with a short-lived link for this browser.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              loading={openingOps === 'horizon'}
-              onClick={() => openOps('horizon')}
-            >
-              Horizon
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              loading={openingOps === 'log_viewer'}
-              onClick={() => openOps('log_viewer')}
-            >
-              Log viewer
-            </Button>
-          </div>
-        </div>
-      )}
+  
 
       {/* KPI row */}
       <div className="grid grid-cols-2 md:grid-cols-2 xl:grid-cols-4 gap-4">
