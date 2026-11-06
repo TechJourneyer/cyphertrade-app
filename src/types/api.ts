@@ -164,6 +164,8 @@ export interface Trade {
   stop_loss:         number
   rr_ratio:          number | null
   pnl:               number | null
+  current_price:     number | null
+  created_at:        string | null
   trade_start_time:  string | null
   trade_expiry_time: string | null
   bot_id:            number | null

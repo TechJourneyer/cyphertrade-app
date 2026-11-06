@@ -15,6 +15,8 @@ export interface TradeFilters {
   bot_id?: number
   account_id?: number
   signal?: string
+  symbol?: string
+  date?: string
   date_from?: string
   date_to?: string
 }
