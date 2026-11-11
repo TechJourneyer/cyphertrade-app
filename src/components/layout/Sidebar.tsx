@@ -15,6 +15,7 @@ import {
   Split,
   Table2,
   KeyRound,
+  Database,
   Zap,
   Users,
   ShieldCheck,
@@ -26,6 +27,7 @@ import {
   ListChecks,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { env } from '@/lib/env'
 import { useAuthStore, selectUser } from '@/store/auth'
 import { Separator } from '@/components/ui/separator'
 import { createOpsLinks, type OpsLinks } from '@/api/ops'
@@ -33,10 +35,11 @@ import { getSetupChecklist } from '@/api/setup'
 import { useToast } from '@/hooks/useToast'
 
 interface NavItem {
-  label:  string
-  href:   string
-  icon:   React.ElementType
-  role?:  string
+  label:     string
+  href:      string
+  icon:      React.ElementType
+  role?:     string
+  external?: boolean
 }
 
 interface NavGroup {
@@ -82,6 +85,9 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Roles',       href: '/roles',       icon: ShieldCheck, role: 'admin' },
       { label: 'Index files', href: '/market/indices', icon: Table2, role: 'admin' },
       { label: 'Analytics token', href: '/admin/analytics-token', icon: KeyRound, role: 'admin' },
+      ...(env.adminerUrl
+        ? [{ label: 'Adminer', href: env.adminerUrl, icon: Database, role: 'admin', external: true }]
+        : []),
     ],
   },
 ]
@@ -170,6 +176,44 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 const isSetup   = item.href === '/dashboard#setup'
                 const isActive  = !isSetup && (pathname === item.href || pathname.startsWith(`${item.href}/`))
 
+                const className = cn(
+                  'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors',
+                  'focus-ring',
+                  isActive
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                    : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+                  collapsed && 'justify-center px-0 py-2 w-full',
+                )
+                const title = collapsed
+                  ? (isSetup && setupRemaining > 0 ? `Setup, ${setupRemaining} open` : item.label)
+                  : undefined
+                const content = (
+                  <>
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    {isSetup && setupRemaining > 0 && !collapsed && (
+                      <span className="ml-auto rounded-full bg-warning/15 px-1.5 text-[10px] font-medium text-warning">
+                        {setupRemaining}
+                      </span>
+                    )}
+                  </>
+                )
+
+                if (item.external) {
+                  return (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      title={title}
+                      className={className}
+                    >
+                      {content}
+                    </a>
+                  )
+                }
+
                 return (
                   <Link
                     key={item.href}
@@ -179,23 +223,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                         window.location.hash = 'setup'
                       }
                     }}
-                    title={collapsed ? (isSetup && setupRemaining > 0 ? `Setup, ${setupRemaining} open` : item.label) : undefined}
-                    className={cn(
-                      'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors',
-                      'focus-ring',
-                      isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                        : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
-                      collapsed && 'justify-center px-0 py-2 w-full',
-                    )}
+                    title={title}
+                    className={className}
                   >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                    {isSetup && setupRemaining > 0 && !collapsed && (
-                      <span className="ml-auto rounded-full bg-warning/15 px-1.5 text-[10px] font-medium text-warning">
-                        {setupRemaining}
-                      </span>
-                    )}
+                    {content}
                   </Link>
                 )
               })}
