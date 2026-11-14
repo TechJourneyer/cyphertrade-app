@@ -133,6 +133,7 @@ export interface ActivityLog {
   trade_id:   number | null
   order_id:   number | null
   activity:   string | null
+  activity_label?: string | null
   message:    string | null
   created_at: string | null
 }

@@ -22,7 +22,7 @@ export function ActivityList({
         <li key={log.id} className="rounded-lg border border-border bg-card p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {log.activity ?? 'Activity'}
+              {log.activity_label ?? log.activity ?? 'Activity'}
             </span>
             <time className="text-xs text-muted-foreground">{formatWhen(log.created_at)}</time>
           </div>
