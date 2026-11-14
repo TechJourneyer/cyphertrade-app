@@ -95,6 +95,8 @@ const NAV_GROUPS: NavGroup[] = [
 interface SidebarProps {
   collapsed:     boolean
   onToggle:      () => void
+  mobileOpen?:   boolean
+  onMobileClose?: () => void
 }
 
 const MONITOR_ITEMS: { label: string; tool: keyof OpsLinks; icon: React.ElementType }[] = [
@@ -102,7 +104,8 @@ const MONITOR_ITEMS: { label: string; tool: keyof OpsLinks; icon: React.ElementT
   { label: 'Log viewer', tool: 'log_viewer', icon: ScrollText },
 ]
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed, onToggle, mobileOpen = false, onMobileClose }: SidebarProps) {
+  const compact = collapsed && !mobileOpen
   const pathname = usePathname()
   const user     = useAuthStore(selectUser)
   const roles    = user?.roles ?? []
@@ -135,20 +138,22 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   return (
     <aside
       className={cn(
-        'flex flex-col h-full bg-sidebar border-r border-sidebar-border',
+        'flex-col h-full bg-sidebar border-r border-sidebar-border',
+        'fixed inset-y-0 left-0 z-50 md:static md:z-auto',
         'transition-all duration-300 ease-out',
-        collapsed ? 'w-14' : 'w-56',
+        mobileOpen ? 'flex' : 'hidden md:flex',
+        collapsed && !mobileOpen ? 'w-56 md:w-14' : 'w-56',
       )}
     >
       {/* Brand */}
       <div
         className={cn(
           'flex items-center h-14 border-b border-sidebar-border shrink-0',
-          collapsed ? 'justify-center px-0' : 'px-4 gap-2',
+          compact ? 'justify-center px-0' : 'px-4 gap-2',
         )}
       >
         <Activity className="h-5 w-5 text-primary shrink-0" />
-        {!collapsed && (
+        {!compact && (
           <span className="text-sm font-bold tracking-tight text-foreground">
             CypherTrade
           </span>
@@ -165,12 +170,12 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
           return (
             <div key={group.title} className="space-y-0.5">
-              {!collapsed && (
+              {!compact && (
                 <p className="px-2 pb-1 text-2xs font-semibold uppercase tracking-widest text-sidebar-foreground/50">
                   {group.title}
                 </p>
               )}
-              {collapsed && <Separator className="bg-sidebar-border mx-1 mb-1" />}
+              {compact && <Separator className="bg-sidebar-border mx-1 mb-1" />}
               {visibleItems.map((item) => {
                 const Icon      = item.icon
                 const isSetup   = item.href === '/dashboard#setup'
@@ -182,16 +187,16 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   isActive
                     ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
                     : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
-                  collapsed && 'justify-center px-0 py-2 w-full',
+                  compact && 'justify-center px-0 py-2 w-full',
                 )
-                const title = collapsed
+                const title = compact
                   ? (isSetup && setupRemaining > 0 ? `Setup, ${setupRemaining} open` : item.label)
                   : undefined
                 const content = (
                   <>
                     <Icon className="h-4 w-4 shrink-0" />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                    {isSetup && setupRemaining > 0 && !collapsed && (
+                    {!compact && <span className="truncate">{item.label}</span>}
+                    {isSetup && setupRemaining > 0 && !compact && (
                       <span className="ml-auto rounded-full bg-warning/15 px-1.5 text-[10px] font-medium text-warning">
                         {setupRemaining}
                       </span>
@@ -206,6 +211,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                       href={item.href}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={() => onMobileClose?.()}
                       title={title}
                       className={className}
                     >
@@ -218,7 +224,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => {
+                      onClick={() => {
+                      onMobileClose?.()
                       if (isSetup && pathname === '/dashboard') {
                         window.location.hash = 'setup'
                       }
@@ -236,30 +243,33 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {isAdmin && (
           <div className="space-y-0.5">
-            {!collapsed && (
+            {!compact && (
               <p className="px-2 pb-1 text-2xs font-semibold uppercase tracking-widest text-sidebar-foreground/50">
                 Monitor
               </p>
             )}
-            {collapsed && <Separator className="bg-sidebar-border mx-1 mb-1" />}
+            {compact && <Separator className="bg-sidebar-border mx-1 mb-1" />}
             {MONITOR_ITEMS.map((item) => {
               const Icon = item.icon
               return (
                 <button
                   key={item.tool}
                   type="button"
-                  title={collapsed ? item.label : undefined}
+                  title={compact ? item.label : undefined}
                   disabled={opening !== null}
-                  onClick={() => openMonitor(item.tool)}
+                  onClick={() => {
+                    onMobileClose?.()
+                    void openMonitor(item.tool)
+                  }}
                   className={cn(
                     'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors w-full text-left',
                     'focus-ring text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                     'disabled:opacity-60',
-                    collapsed && 'justify-center px-0 py-2',
+                    compact && 'justify-center px-0 py-2',
                   )}
                 >
                   <Icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  {!compact && <span className="truncate">{item.label}</span>}
                 </button>
               )
             })}
@@ -268,7 +278,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* Collapse toggle */}
-      <div className="shrink-0 p-2 border-t border-sidebar-border">
+      <div className="hidden shrink-0 border-t border-sidebar-border p-2 md:block">
         <button
           onClick={onToggle}
           className={cn(

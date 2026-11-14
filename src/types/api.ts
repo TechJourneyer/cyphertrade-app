@@ -120,20 +120,44 @@ export type OrderStatus = 'pending' | 'open' | 'filled' | 'cancelled' | 'rejecte
 export type OrderSide   = 'BUY' | 'SELL'
 export type OrderType   = 'MARKET' | 'LIMIT' | 'SL' | 'SL-M'
 
+export interface OrderTradeSummary {
+  trade_id:       number
+  signal:         string | null
+  status:         string | null
+  status_label:   string | null
+  strategy_name:  string | null
+}
+
+export interface ActivityLog {
+  id:         number
+  trade_id:   number | null
+  order_id:   number | null
+  activity:   string | null
+  message:    string | null
+  created_at: string | null
+}
+
 export interface Order {
   id:                 number
   trade_id:           number | null
   instrument_id:      number | null
-  order_stage:        string | null
+  order_stage:        string | number | null
+  order_stage_label?: string | null
   transaction_type:   string | null
-  order_type:         string | null
+  transaction_type_label?: string | null
+  order_type:         string | number | null
+  order_type_label?:  string | null
   order_product:      string | null
-  validity:           string | null
-  status:             string | null
-  exit_reason:        string | null
+  order_product_label?: string | null
+  validity:           string | number | null
+  validity_label?:    string | null
+  status:             string | number | null
+  status_label?:      string | null
+  exit_reason:        string | number | null
+  exit_reason_label?: string | null
   quantity:           number
-  price:              number
-  trigger_price:      number
+  price:              number | null
+  trigger_price:      number | null
   executed_price:     number | null
   fees:               number | null
   broker_order_id:    string | null
@@ -144,6 +168,7 @@ export interface Order {
     name:           string
     trading_symbol: string
   } | null
+  trade?: OrderTradeSummary | null
   created_at: string
   updated_at: string
 }
@@ -182,6 +207,7 @@ export interface Trade {
     name:           string
     trading_symbol: string
   } | null
+  orders?: Order[]
 }
 
 // ─── Instruments ─────────────────────────────────────────────────────────────

@@ -63,6 +63,19 @@ export function secondsAgo(date: string | Date | null | undefined): number {
   return Math.floor((Date.now() - new Date(date).getTime()) / 1000)
 }
 
+/** Short local timestamp, e.g. 14 Nov, 09:15 */
+export function formatWhen(value: unknown): string {
+  if (typeof value !== 'string' || value === '') return '—'
+  const dt = new Date(value)
+  if (Number.isNaN(dt.getTime())) return '—'
+  return dt.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 /** Truncate a string with ellipsis */
 export function truncate(str: string, length: number): string {
   return str.length <= length ? str : `${str.slice(0, length)}…`

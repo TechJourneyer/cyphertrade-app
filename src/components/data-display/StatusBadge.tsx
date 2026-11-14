@@ -31,6 +31,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   pending:       { label: 'Pending',       className: 'bg-primary/15 text-primary border-primary/30' },
   open:          { label: 'Open',          className: 'bg-primary/15 text-primary border-primary/30' },
   filled:        { label: 'Filled',        className: 'bg-success/15 text-success border-success/30' },
+  'partially filled': { label: 'Partially filled', className: 'bg-primary/15 text-primary border-primary/30' },
   cancelled:     { label: 'Cancelled',     className: 'bg-muted text-muted-foreground border-border' },
   rejected:      { label: 'Rejected',      className: 'bg-destructive/15 text-destructive border-destructive/30' },
   expired:       { label: 'Expired',       className: 'bg-muted text-muted-foreground border-border' },

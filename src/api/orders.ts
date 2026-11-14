@@ -1,5 +1,5 @@
 import { apiGet, apiList } from './client'
-import type { Order, PaginationMeta } from '@/types/api'
+import type { ActivityLog, Order, PaginationMeta } from '@/types/api'
 
 export interface OrdersListResponse {
   data: Order[]
@@ -31,6 +31,6 @@ export async function get(id: number): Promise<Order> {
 /**
  * Get order logs
  */
-export async function logs(id: number): Promise<unknown> {
-  return apiGet(`/orders/${id}/logs`)
+export async function logs(id: number): Promise<ActivityLog[]> {
+  return apiGet<ActivityLog[]>(`/orders/${id}/logs`)
 }

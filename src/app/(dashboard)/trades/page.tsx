@@ -8,25 +8,14 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { useTradingAccount } from '@/hooks/useTradingAccount';
 import * as tradesApi from '@/api/trades';
-import { formatCurrency } from '@/lib/utils'
+import Link from 'next/link'
+import { formatCurrency, formatWhen } from '@/lib/utils'
 import type { Trade } from '@/types/api';
 
 function formatPrice(value: unknown): string {
   const n = Number(value);
   if (value === null || value === undefined || Number.isNaN(n)) return '—';
   return `₹${n.toFixed(2)}`;
-}
-
-function formatWhen(value: unknown): string {
-  if (typeof value !== 'string' || value === '') return '—';
-  const dt = new Date(value);
-  if (Number.isNaN(dt.getTime())) return '—';
-  return dt.toLocaleString('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 export default function TradesPage() {
@@ -71,6 +60,11 @@ export default function TradesPage() {
       if (value === null || value === undefined || isNaN(n)) return '—';
       return <span className={`font-semibold font-mono ${n >= 0 ? 'text-gain' : 'text-loss'}`}>₹{n.toFixed(2)}</span>;
     } },
+    { key: 'trade_id', label: 'Details', sortable: false, render: (_: unknown, row: Trade) => (
+      <Link href={`/trades/${row.trade_id}`} className="font-medium text-primary hover:underline">
+        View
+      </Link>
+    ) },
     { key: 'status', label: 'Status', sortable: true, render: (_: unknown, row: Trade) => (
       <div className="flex flex-col gap-0.5">
         <span>{row.status_label ?? row.status ?? '—'}</span>

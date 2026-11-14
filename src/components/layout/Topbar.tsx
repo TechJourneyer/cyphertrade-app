@@ -1,6 +1,6 @@
 'use client'
 
-import { LogOut, User, Settings, Bell, ChevronsUpDown, Plus, PencilLine } from 'lucide-react'
+import { LogOut, User, Settings, Bell, ChevronsUpDown, Plus, PencilLine, Menu } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useTradingAccount } from '@/hooks/useTradingAccount'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -19,6 +19,7 @@ import Link from 'next/link'
 
 interface TopbarProps {
   className?: string
+  onOpenMenu?: () => void
 }
 
 function terminalExpiryLabel(iso: string | null | undefined): string | null {
@@ -42,7 +43,7 @@ function getInitials(name: string): string {
     .join('')
 }
 
-export function Topbar({ className }: TopbarProps) {
+export function Topbar({ className, onOpenMenu }: TopbarProps) {
   const { user, logout } = useAuth()
   const {
     accounts,
@@ -61,8 +62,17 @@ export function Topbar({ className }: TopbarProps) {
         className,
       )}
     >
+      <div className="flex min-w-0 items-center gap-1">
+        <button
+          type="button"
+          onClick={onOpenMenu}
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-secondary md:hidden"
+          aria-label="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
       {/* Left — Trading Account Switcher */}
-      <div className="flex items-center">
+      <div className="flex min-w-0 items-center">
         {accountsLoading ? (
           <Skeleton className="h-7 w-36" />
         ) : !hasAccounts ? (
@@ -172,6 +182,7 @@ export function Topbar({ className }: TopbarProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+      </div>
       </div>
 
       {/* Right — Notifications + User */}

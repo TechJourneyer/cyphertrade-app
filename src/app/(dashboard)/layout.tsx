@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { getMe } from '@/api/auth'
 import { useAuthStore, selectHasHydrated, selectIsAuthed } from '@/store/auth'
 import { useTradingAccount } from '@/hooks/useTradingAccount'
@@ -18,7 +18,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router       = useRouter()
   const hasHydrated  = useAuthStore(selectHasHydrated)
   const isAuthed     = useAuthStore(selectIsAuthed)
+  const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const [mobileNav, setMobileNav] = useState(false)
+
+  useEffect(() => {
+    setMobileNav(false)
+  }, [pathname])
 
   useEffect(() => {
     if (hasHydrated && !isAuthed) {
@@ -58,19 +64,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background">
-      {/* Sidebar */}
+      {mobileNav && (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          aria-label="Close menu"
+          onClick={() => setMobileNav(false)}
+        />
+      )}
       <Sidebar
         collapsed={collapsed}
         onToggle={() => setCollapsed((c) => !c)}
+        mobileOpen={mobileNav}
+        onMobileClose={() => setMobileNav(false)}
       />
 
       {/* Main area */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Topbar />
+        <Topbar onOpenMenu={() => setMobileNav(true)} />
         <NoAccountBanner />
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto p-6 animate-fade-in">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 animate-fade-in">
           {children}
         </main>
       </div>
