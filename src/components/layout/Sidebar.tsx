@@ -85,6 +85,7 @@ const NAV_GROUPS: NavGroup[] = [
       { label: 'Roles',       href: '/roles',       icon: ShieldCheck, role: 'admin' },
       { label: 'Index files', href: '/market/indices', icon: Table2, role: 'admin' },
       { label: 'Analytics token', href: '/admin/analytics-token', icon: KeyRound, role: 'admin' },
+      { label: 'API requests', href: '/admin/api-requests', icon: ScrollText, role: 'admin' },
       ...(env.adminerUrl
         ? [{ label: 'Adminer', href: env.adminerUrl, icon: Database, role: 'admin', external: true }]
         : []),

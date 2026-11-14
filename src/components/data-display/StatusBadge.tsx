@@ -29,6 +29,9 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   token_expired: { label: 'Token Expired', className: 'bg-warning/15 text-warning border-warning/30' },
   // Orders
   pending:       { label: 'Pending',       className: 'bg-primary/15 text-primary border-primary/30' },
+  success:       { label: 'Success',       className: 'bg-success/15 text-success border-success/30' },
+  failure:       { label: 'Failure',       className: 'bg-destructive/15 text-destructive border-destructive/30' },
+  throttled:     { label: 'Throttled',     className: 'bg-warning/15 text-warning border-warning/30' },
   open:          { label: 'Open',          className: 'bg-primary/15 text-primary border-primary/30' },
   filled:        { label: 'Filled',        className: 'bg-success/15 text-success border-success/30' },
   'partially filled': { label: 'Partially filled', className: 'bg-primary/15 text-primary border-primary/30' },

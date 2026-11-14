@@ -128,6 +128,20 @@ export interface OrderTradeSummary {
   strategy_name:  string | null
 }
 
+export interface TradingApiRequestLog {
+  id: number
+  endpoint: string
+  rate_limit_group: string | null
+  status: number | null
+  status_label: string | null
+  status_code: number | null
+  message: string | null
+  request_params?: Record<string, unknown> | null
+  response?: Record<string, unknown> | null
+  account: { id: number; account_name: string } | null
+  created_at: string | null
+}
+
 export interface ActivityLog {
   id:         number
   trade_id:   number | null
