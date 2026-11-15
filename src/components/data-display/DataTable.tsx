@@ -138,8 +138,11 @@ export function DataTable<T extends object>({
 
   if (isEmpty || data.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">{emptyText}</p>
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
+        <div className="p-8 text-center">
+          <p className="text-sm text-muted-foreground">{emptyText}</p>
+        </div>
+        {pager}
       </div>
     )
   }

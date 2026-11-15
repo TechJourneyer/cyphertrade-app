@@ -10,6 +10,8 @@ export interface OrderFilters {
   status?: string
   bot_id?: number
   account_id?: number
+  symbol?: string
+  date?: string
   date_from?: string
   date_to?: string
 }
