@@ -4,7 +4,7 @@ import type { PaginationMeta } from '@/types/api'
 
 export const apiClient = axios.create({
   baseURL:        env.apiUrl,
-  timeout:        15_000,
+  timeout:        60_000,
   headers: {
     'Content-Type': 'application/json',
     Accept:         'application/json',
